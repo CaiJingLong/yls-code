@@ -1,0 +1,17 @@
+.agents/**
+.git/**
+.gitignore
+docs/**
+esbuild.mjs
+node_modules/**
+src/**
+dist/test/**
+webview-ui/bun.lock
+webview-ui/index.html
+webview-ui/node_modules/**
+webview-ui/package.json
+webview-ui/src/**
+webview-ui/tsconfig.json
+webview-ui/vite.config.ts
+tsconfig*.json
+vitest.config.ts
