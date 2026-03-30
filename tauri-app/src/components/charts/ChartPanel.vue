@@ -67,8 +67,9 @@ onBeforeUnmount(() => {
     <header class="panel-header">
       <h2>{{ title }}</h2>
     </header>
-    <div v-if="loading" class="panel-empty">{{ t.common.loadingChart }}</div>
-    <div v-else-if="empty" class="panel-empty">{{ t.common.noData }}</div>
+    <div v-if="empty" class="panel-empty">
+      {{ loading ? t.common.loadingChart : t.common.noData }}
+    </div>
     <div v-else ref="root" class="chart-root"></div>
   </section>
 </template>
