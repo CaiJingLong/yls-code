@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive, watch } from "vue";
 
+import PageHeader from "../components/layout/PageHeader.vue";
 import LogsTable from "../components/logs/LogsTable.vue";
 import { zhCN } from "../i18n/zhCN";
 import { queryLogs } from "../lib/tauri/query";
@@ -63,13 +64,9 @@ watch(
 
 <template>
   <section class="page page-grid">
-    <div class="page-title">
-      <div>
-        <h2>{{ t.logs.title }}</h2>
-        <p>{{ t.logs.subtitle }}</p>
-      </div>
+    <PageHeader :title="t.logs.title" :subtitle="t.logs.subtitle">
       <button class="secondary" :disabled="state.loading" @click="loadLogs">{{ t.common.refresh }}</button>
-    </div>
+    </PageHeader>
 
     <div v-if="!accountsStore.state.activeAccountId" class="empty-state">
       {{ t.logs.emptyNoAccount }}

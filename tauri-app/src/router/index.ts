@@ -4,6 +4,7 @@ import AnalyticsPage from "../pages/AnalyticsPage.vue";
 import KeysPage from "../pages/KeysPage.vue";
 import LogsPage from "../pages/LogsPage.vue";
 import OverviewPage from "../pages/OverviewPage.vue";
+import SettingsPage from "../pages/SettingsPage.vue";
 
 export function createAppRouter(useMemoryHistory = false) {
   return createRouter({
@@ -14,6 +15,7 @@ export function createAppRouter(useMemoryHistory = false) {
       { path: "/logs", component: LogsPage },
       { path: "/analytics", component: AnalyticsPage },
       { path: "/keys", component: KeysPage },
+      { path: "/settings", component: SettingsPage },
     ],
   });
 }

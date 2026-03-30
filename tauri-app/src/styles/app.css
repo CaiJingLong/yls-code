@@ -49,11 +49,13 @@ html,
 body,
 #app {
   margin: 0;
+  height: 100vh;
   min-height: 100vh;
 }
 
 body {
   min-width: 320px;
+  overflow: hidden;
 }
 
 button,
@@ -75,6 +77,7 @@ code {
 
 .app-shell {
   display: grid;
+  height: 100vh;
   min-height: 100vh;
   grid-template-columns: 250px 1fr;
 }
@@ -82,6 +85,8 @@ code {
 .sidebar {
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow: auto;
   gap: 2rem;
   padding: 2rem 1.3rem;
   border-right: 1px solid var(--border);
@@ -145,6 +150,9 @@ code {
 .content-shell {
   display: grid;
   grid-template-rows: auto 1fr;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .topbar {
@@ -187,7 +195,15 @@ code {
 }
 
 .page {
+  min-width: 0;
   padding: 1.5rem;
+}
+
+.content-scroll {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
 }
 
 .page-grid {

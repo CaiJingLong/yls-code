@@ -21,7 +21,11 @@ onBeforeUnmount(() => {
     <SidebarNav />
     <div class="content-shell">
       <TopBar />
-      <RouterView />
+      <RouterView v-slot="{ Component }">
+        <div class="content-scroll">
+          <component :is="Component" />
+        </div>
+      </RouterView>
     </div>
   </div>
 </template>

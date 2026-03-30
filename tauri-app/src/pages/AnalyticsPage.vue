@@ -3,6 +3,7 @@ import { reactive, watch } from "vue";
 
 import CostTrendChart from "../components/charts/CostTrendChart.vue";
 import ModelCostPie from "../components/charts/ModelCostPie.vue";
+import PageHeader from "../components/layout/PageHeader.vue";
 import { zhCN } from "../i18n/zhCN";
 import { queryAnalytics } from "../lib/tauri/query";
 import { accountsStore } from "../stores/accounts";
@@ -51,11 +52,7 @@ watch(
 
 <template>
   <section class="page page-grid">
-    <div class="page-title">
-      <div>
-        <h2>{{ t.analytics.title }}</h2>
-        <p>{{ t.analytics.subtitle }}</p>
-      </div>
+    <PageHeader :title="t.analytics.title" :subtitle="t.analytics.subtitle">
       <label class="field">
         <span>{{ t.analytics.granularity }}</span>
         <select v-model="state.granularity">
@@ -63,7 +60,7 @@ watch(
           <option value="day">{{ t.analytics.daily }}</option>
         </select>
       </label>
-    </div>
+    </PageHeader>
 
     <div v-if="!accountsStore.state.activeAccountId" class="empty-state">
       {{ t.analytics.emptyNoAccount }}

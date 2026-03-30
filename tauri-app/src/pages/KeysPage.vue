@@ -2,6 +2,7 @@
 import { computed, reactive } from "vue";
 
 import AccountForm from "../components/keys/AccountForm.vue";
+import PageHeader from "../components/layout/PageHeader.vue";
 import { zhCN } from "../i18n/zhCN";
 import { accountsStore } from "../stores/accounts";
 import type { SaveAccountInput } from "../types/accounts";
@@ -77,12 +78,7 @@ const t = zhCN;
 
 <template>
   <section class="page page-grid">
-    <div class="page-title">
-      <div>
-        <h2>{{ t.keys.title }}</h2>
-        <p>{{ t.keys.subtitle }}</p>
-      </div>
-    </div>
+    <PageHeader :title="t.keys.title" :subtitle="t.keys.subtitle" />
 
     <div v-if="state.error" class="empty-state">{{ state.error }}</div>
 

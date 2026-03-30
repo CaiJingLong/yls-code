@@ -17,10 +17,7 @@ const t = zhCN;
       <RouterLink class="sidebar-link" to="/logs">{{ t.nav.logs }}</RouterLink>
       <RouterLink class="sidebar-link" to="/analytics">{{ t.nav.analytics }}</RouterLink>
       <RouterLink class="sidebar-link" to="/keys">{{ t.nav.keys }}</RouterLink>
+      <RouterLink class="sidebar-link" to="/settings">{{ t.nav.settings }}</RouterLink>
     </nav>
-
-    <p class="sidebar-meta">
-      {{ t.nav.archivedPrefix }} <code>vscode-plugin/</code>。
-    </p>
   </aside>
 </template>

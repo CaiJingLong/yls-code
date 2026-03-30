@@ -6,7 +6,7 @@ import App from "./App.vue";
 import { createAppRouter } from "./router";
 
 describe("App", () => {
-  it("renders the app title and shell navigation", async () => {
+  it("renders the app title, settings navigation, and a simplified top bar", async () => {
     const router = createAppRouter(true);
     router.push("/overview");
     await router.isReady();
@@ -19,5 +19,10 @@ describe("App", () => {
 
     expect(wrapper.get("[data-testid='app-title']").text()).toContain("yls-code");
     expect(wrapper.get("[data-testid='shell-nav']")).toBeDefined();
+    expect(wrapper.text()).toContain("设置");
+    expect(wrapper.text()).not.toContain("立即同步");
+    expect(wrapper.text()).not.toContain("全量同步");
+    expect(wrapper.text()).not.toContain("轮询间隔");
+    expect(wrapper.text()).not.toContain("自动同步");
   });
 });

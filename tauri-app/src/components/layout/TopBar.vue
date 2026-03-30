@@ -53,23 +53,6 @@ watch(
           </option>
         </select>
       </label>
-
-      <div class="actions">
-        <button
-          class="secondary"
-          :disabled="!accountsStore.state.activeAccountId || syncStore.state.status === 'running'"
-          @click="syncStore.trigger('incremental')"
-        >
-          {{ t.topBar.syncNow }}
-        </button>
-        <button
-          class="ghost"
-          :disabled="!accountsStore.state.activeAccountId || syncStore.state.status === 'running'"
-          @click="syncStore.trigger('full')"
-        >
-          {{ t.topBar.fullSync }}
-        </button>
-      </div>
     </div>
 
     <div class="topbar-group">
@@ -86,30 +69,6 @@ watch(
           <option value="system">{{ t.topBar.themeSystem }}</option>
           <option value="light">{{ t.topBar.themeLight }}</option>
           <option value="dark">{{ t.topBar.themeDark }}</option>
-        </select>
-      </label>
-
-      <label class="topbar-field">
-        <span>{{ t.topBar.polling }}</span>
-        <select
-          :value="preferencesStore.state.pollingIntervalMs"
-          :disabled="!preferencesStore.state.pollingEnabled"
-          @change="preferencesStore.setPollingIntervalMs(Number(($event.target as HTMLSelectElement).value))"
-        >
-          <option :value="15000">15s</option>
-          <option :value="30000">30s</option>
-          <option :value="60000">60s</option>
-        </select>
-      </label>
-
-      <label class="topbar-field">
-        <span>{{ t.topBar.autoSync }}</span>
-        <select
-          :value="preferencesStore.state.pollingEnabled ? 'on' : 'off'"
-          @change="preferencesStore.setPollingEnabled(($event.target as HTMLSelectElement).value === 'on')"
-        >
-          <option value="on">{{ t.topBar.autoSyncEnabled }}</option>
-          <option value="off">{{ t.topBar.autoSyncDisabled }}</option>
         </select>
       </label>
 
