@@ -4,6 +4,7 @@ export interface OverviewResponse {
   baseUrl: string;
   enabled: boolean;
   hasApiKey: boolean;
+  todayRemainingQuota: number | null;
   cachedLogCount: number;
   totalCostUsd: number;
   totalTokens: number;

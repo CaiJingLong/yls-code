@@ -41,6 +41,10 @@ watch(
 <template>
   <header class="topbar">
     <div class="topbar-group">
+      <span class="topbar-status">{{ statusText }}</span>
+    </div>
+
+    <div class="topbar-group topbar-controls">
       <label class="topbar-field">
         <span>{{ t.topBar.account }}</span>
         <select
@@ -71,8 +75,6 @@ watch(
           <option value="dark">{{ t.topBar.themeDark }}</option>
         </select>
       </label>
-
-      <span class="topbar-status">{{ statusText }}</span>
     </div>
   </header>
 </template>

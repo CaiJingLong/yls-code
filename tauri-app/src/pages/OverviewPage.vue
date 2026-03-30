@@ -5,6 +5,7 @@ import CostTrendChart from "../components/charts/CostTrendChart.vue";
 import ModelCostPie from "../components/charts/ModelCostPie.vue";
 import PageHeader from "../components/layout/PageHeader.vue";
 import { zhCN } from "../i18n/zhCN";
+import { formatDateTimeDisplay } from "../lib/datetime";
 import { queryAnalytics, queryOverview } from "../lib/tauri/query";
 import { accountsStore } from "../stores/accounts";
 import { syncStore } from "../stores/sync";
@@ -45,6 +46,14 @@ async function loadData() {
 
 const t = zhCN;
 
+function formatQuotaValue(value: number | null | undefined) {
+  if (value == null) {
+    return t.common.noValue;
+  }
+
+  return `$${value.toFixed(4)}`;
+}
+
 watch(
   () => [accountsStore.state.activeAccountId, state.granularity, syncStore.state.status, syncStore.state.progress?.jobId],
   () => {
@@ -79,8 +88,14 @@ watch(
         </article>
         <article class="card">
           <h3>{{ t.overview.cachedLogs }}</h3>
-          <div class="card-value">{{ state.overview?.cachedLogCount ?? 0 }}</div>
-          <p>{{ state.overview?.latestLogAt ?? t.overview.noLocalLogs }}</p>
+          <div class="card-value">{{ formatQuotaValue(state.overview?.todayRemainingQuota) }}</div>
+          <p>
+            {{
+              state.overview?.todayRemainingQuota == null
+                ? t.overview.remainingQuotaUnavailable
+                : t.overview.remainingQuotaHint
+            }}
+          </p>
         </article>
         <article class="card">
           <h3>{{ t.overview.totalCost }}</h3>
@@ -90,7 +105,10 @@ watch(
         <article class="card">
           <h3>{{ t.overview.totalTokens }}</h3>
           <div class="card-value">{{ state.overview?.totalTokens ?? 0 }}</div>
-          <p>{{ t.overview.lastSyncPrefix }}{{ state.overview?.lastSuccessfulSyncAt ?? t.overview.never }}</p>
+          <p>
+            {{ t.overview.lastSyncPrefix
+            }}{{ formatDateTimeDisplay(state.overview?.lastSuccessfulSyncAt) ?? t.overview.never }}
+          </p>
         </article>
       </div>
 

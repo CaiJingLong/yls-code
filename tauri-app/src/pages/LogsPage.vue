@@ -4,6 +4,7 @@ import { reactive, watch } from "vue";
 import PageHeader from "../components/layout/PageHeader.vue";
 import LogsTable from "../components/logs/LogsTable.vue";
 import { zhCN } from "../i18n/zhCN";
+import { toUtcISOStringFromLocalInput } from "../lib/datetime";
 import { queryLogs } from "../lib/tauri/query";
 import { accountsStore } from "../stores/accounts";
 import { syncStore } from "../stores/sync";
@@ -41,8 +42,8 @@ async function loadLogs() {
       pageSize: filters.pageSize,
       search: filters.search || null,
       model: filters.model || null,
-      createdAfter: filters.createdAfter || null,
-      createdBefore: filters.createdBefore || null,
+      createdAfter: toUtcISOStringFromLocalInput(filters.createdAfter),
+      createdBefore: toUtcISOStringFromLocalInput(filters.createdBefore),
     });
   } catch {
     state.error = zhCN.errors.loadLogs;
@@ -84,11 +85,11 @@ watch(
           </label>
           <label class="field">
             <span>{{ t.logs.createdAfter }}</span>
-            <input v-model="filters.createdAfter" :placeholder="t.logs.createdAfterPlaceholder" />
+            <input v-model="filters.createdAfter" type="datetime-local" />
           </label>
           <label class="field">
             <span>{{ t.logs.createdBefore }}</span>
-            <input v-model="filters.createdBefore" :placeholder="t.logs.createdBeforePlaceholder" />
+            <input v-model="filters.createdBefore" type="datetime-local" />
           </label>
         </div>
         <div class="actions">

@@ -8,6 +8,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::app_state::AppState;
 
+use super::yls_client::YlsClient;
+
 pub struct QueryService;
 
 #[derive(Clone, Debug, Serialize)]
@@ -18,6 +20,7 @@ pub struct OverviewResponse {
     pub base_url: String,
     pub enabled: bool,
     pub has_api_key: bool,
+    pub today_remaining_quota: Option<f64>,
     pub cached_log_count: i64,
     pub total_cost_usd: f64,
     pub total_tokens: i64,
@@ -119,6 +122,15 @@ impl QueryService {
             )
             .optional()?
             .with_context(|| format!("account `{account_id}` was not found"))?;
+        let api_key = state.secret_store.load_api_key(account_id)?;
+        let today_remaining_quota = api_key
+            .as_ref()
+            .map(|api_key| {
+                YlsClient::new(account.2.clone(), api_key.clone())
+                    .fetch_info()
+                    .map(|response| response.state.user_packge_usage.remaining_quota)
+            })
+            .transpose()?;
         let usage = connection.query_row(
             "SELECT
                 COUNT(1),
@@ -160,7 +172,8 @@ impl QueryService {
             account_name: account.1,
             base_url: account.2,
             enabled: account.3,
-            has_api_key: state.secret_store.load_api_key(account_id)?.is_some(),
+            has_api_key: api_key.is_some(),
+            today_remaining_quota,
             cached_log_count: usage.0,
             total_cost_usd: usage.1,
             total_tokens: usage.2,

@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use mockito::Server;
 use rusqlite::Connection;
 use tempfile::{tempdir, TempDir};
 
@@ -14,7 +15,40 @@ use tauri_app_lib::{
 
 #[test]
 fn query_overview_returns_account_usage_and_sync_metadata() {
-    let (state, _store, _tempdir) = seeded_state();
+    let mut server = Server::new();
+    let _mock = server
+        .mock("GET", "/codex/info")
+        .match_header("authorization", "Bearer yls-secret")
+        .with_status(200)
+        .with_body(
+            serde_json::json!({
+                "code": 200,
+                "msg": "ok",
+                "state": {
+                    "toDay": "2026-03-30",
+                    "package": {
+                        "total_quota": 100.0,
+                        "cache": true,
+                        "package_level": 1,
+                        "packages": []
+                    },
+                    "userPackgeUsage": {
+                        "total_tokens": 4200,
+                        "total_cost": 0.017,
+                        "request_count": 3,
+                        "total_quota": 100.0,
+                        "remaining_quota": 87.5
+                    },
+                    "userAccountInfo": {
+                        "total_balance": 20.0,
+                        "accountId": "acct-query"
+                    }
+                }
+            })
+            .to_string(),
+        )
+        .create();
+    let (state, _store, _tempdir) = seeded_state(&server.url());
 
     let overview = QueryService::query_overview(&state, "acct-query").expect("query overview");
 
@@ -24,9 +58,10 @@ fn query_overview_returns_account_usage_and_sync_metadata() {
     assert_eq!(overview.total_tokens, 4200);
     assert!((overview.total_cost_usd - 0.017).abs() < f64::EPSILON);
     assert_eq!(overview.last_successful_sync_at.as_deref(), Some("100"));
+    assert_eq!(overview.today_remaining_quota, Some(87.5));
 }
 
-fn seeded_state() -> (AppState, MemorySecretStore, TempDir) {
+fn seeded_state(base_url: &str) -> (AppState, MemorySecretStore, TempDir) {
     let tempdir = tempdir().expect("tempdir");
     let data_dir = tempdir.path().join("app-local-data");
     let db_path = bootstrap_database_at(&data_dir).expect("bootstrap database");
@@ -37,20 +72,20 @@ fn seeded_state() -> (AppState, MemorySecretStore, TempDir) {
         .expect("save api key");
 
     let connection = Connection::open(db_path).expect("open sqlite db");
-    seed_account(&connection);
+    seed_account(&connection, base_url);
     seed_logs(&connection);
     seed_sync_state(&connection);
 
     (state, store, tempdir)
 }
 
-fn seed_account(connection: &Connection) {
+fn seed_account(connection: &Connection, base_url: &str) {
     connection
         .execute(
             "INSERT INTO accounts (
                 id, name, base_url, enabled, created_at, updated_at, last_used_at
-             ) VALUES ('acct-query', 'Query Account', 'https://code.ylsagi.com', 1, '1', '2', NULL)",
-            [],
+             ) VALUES ('acct-query', 'Query Account', ?1, 1, '1', '2', NULL)",
+            [base_url],
         )
         .expect("seed account");
 }

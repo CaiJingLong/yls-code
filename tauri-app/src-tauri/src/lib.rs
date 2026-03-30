@@ -34,6 +34,7 @@ pub fn run() {
             commands::query::query_analytics,
             commands::query::query_logs,
             commands::query::query_overview,
+            commands::system::get_system_timezone,
             commands::sync::start_sync,
         ])
         .setup(|app| {

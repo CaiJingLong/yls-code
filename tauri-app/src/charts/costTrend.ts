@@ -1,4 +1,8 @@
 import type { EChartsOption } from "../lib/echarts";
+import {
+  formatTrendBucketAxisLabel,
+  formatTrendBucketTooltipLabel,
+} from "../lib/datetime";
 import type { TrendPoint } from "../types/query";
 import type { AnalyticsGranularity } from "../types/query";
 import type { ResolvedTheme } from "../composables/useResolvedTheme";
@@ -8,11 +12,33 @@ export function createCostTrendOption(
   theme: ResolvedTheme,
   granularity: AnalyticsGranularity,
 ): EChartsOption {
+  const axisLabels = data.map((item) =>
+    formatTrendBucketAxisLabel(item.bucket, granularity),
+  );
+
   return {
     backgroundColor: "transparent",
     tooltip: {
       trigger: "axis",
-      valueFormatter: (value: number) => `$${Number(value).toFixed(4)}`,
+      formatter: (params: unknown) => {
+        const items = (Array.isArray(params) ? params : [params]) as Array<{
+          dataIndex?: number;
+          marker?: string;
+          seriesName?: string;
+          value?: number;
+        }>;
+        const firstItem = items[0];
+        const bucket = data[firstItem?.dataIndex ?? 0]?.bucket ?? "";
+        const title = formatTrendBucketTooltipLabel(bucket, granularity);
+
+        return [
+          title,
+          ...items.map((item) => {
+            const value = Number(item.value ?? 0);
+            return `${item.marker ?? ""}${item.seriesName ?? ""}: $${value.toFixed(4)}`;
+          }),
+        ].join("<br/>");
+      },
     },
     grid: {
       left: 10,
@@ -22,7 +48,7 @@ export function createCostTrendOption(
     },
     xAxis: {
       type: "category",
-      data: data.map((item) => item.bucket),
+      data: axisLabels,
       axisLabel: {
         color: theme === "dark" ? "#bba993" : "#665648",
         hideOverlap: true,
