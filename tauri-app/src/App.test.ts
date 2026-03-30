@@ -10,6 +10,6 @@ describe("App", () => {
     expect(wrapper.get("[data-testid='app-title']").text()).toContain(
       "YLS Desktop Workbench",
     );
-    expect(wrapper.get("[data-testid='shell-nav']").exists()).toBe(true);
+    expect(wrapper.get("[data-testid='shell-nav']")).toBeDefined();
   });
 });
