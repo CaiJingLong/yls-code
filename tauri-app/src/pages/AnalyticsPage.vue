@@ -3,6 +3,7 @@ import { reactive, watch } from "vue";
 
 import CostTrendChart from "../components/charts/CostTrendChart.vue";
 import ModelCostPie from "../components/charts/ModelCostPie.vue";
+import { zhCN } from "../i18n/zhCN";
 import { queryAnalytics } from "../lib/tauri/query";
 import { accountsStore } from "../stores/accounts";
 import { syncStore } from "../stores/sync";
@@ -30,12 +31,14 @@ async function loadAnalytics() {
       accountId,
       granularity: state.granularity,
     });
-  } catch (error) {
-    state.error = error instanceof Error ? error.message : "Failed to query analytics";
+  } catch {
+    state.error = zhCN.errors.loadAnalytics;
   } finally {
     state.loading = false;
   }
 }
+
+const t = zhCN;
 
 watch(
   () => [accountsStore.state.activeAccountId, state.granularity, syncStore.state.progress?.jobId],
@@ -50,20 +53,20 @@ watch(
   <section class="page page-grid">
     <div class="page-title">
       <div>
-        <h2>Analytics</h2>
-        <p>Break cost and tokens down by model and time bucket.</p>
+        <h2>{{ t.analytics.title }}</h2>
+        <p>{{ t.analytics.subtitle }}</p>
       </div>
       <label class="field">
-        <span>Granularity</span>
+        <span>{{ t.analytics.granularity }}</span>
         <select v-model="state.granularity">
-          <option value="hour">Hourly</option>
-          <option value="day">Daily</option>
+          <option value="hour">{{ t.analytics.hourly }}</option>
+          <option value="day">{{ t.analytics.daily }}</option>
         </select>
       </label>
     </div>
 
     <div v-if="!accountsStore.state.activeAccountId" class="empty-state">
-      Select an account to query analytics.
+      {{ t.analytics.emptyNoAccount }}
     </div>
     <div v-else-if="state.error" class="empty-state">{{ state.error }}</div>
     <template v-else>
@@ -73,22 +76,22 @@ watch(
           :data="state.analytics?.trend ?? []"
           :granularity="state.granularity"
           :loading="state.loading"
-          title="Cost Trend"
+          :title="t.analytics.costTrend"
         />
       </div>
 
       <section class="table-panel">
         <header class="table-header">
-          <h2>Model Ranking</h2>
+          <h2>{{ t.analytics.modelRanking }}</h2>
         </header>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Model</th>
-                <th>Cost</th>
-                <th>Tokens</th>
-                <th>Requests</th>
+                <th>{{ t.analytics.columnModel }}</th>
+                <th>{{ t.analytics.columnCost }}</th>
+                <th>{{ t.analytics.columnTokens }}</th>
+                <th>{{ t.analytics.columnRequests }}</th>
               </tr>
             </thead>
             <tbody>

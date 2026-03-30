@@ -39,7 +39,7 @@ export function createCostTrendOption(
     },
     series: [
       {
-        name: "USD",
+        name: "美元",
         type: "line",
         smooth: true,
         data: data.map((item) => item.totalCostUsd),

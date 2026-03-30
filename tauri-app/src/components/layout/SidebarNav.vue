@@ -1,20 +1,26 @@
+<script setup lang="ts">
+import { zhCN } from "../../i18n/zhCN";
+
+const t = zhCN;
+</script>
+
 <template>
   <aside class="sidebar" data-testid="shell-nav">
     <div class="brand">
       <p class="brand-kicker">YLS</p>
       <h1 class="brand-title" data-testid="app-title">yls-code</h1>
-      <p class="brand-subtitle">Local-first usage control center</p>
+      <p class="brand-subtitle">{{ t.nav.subtitle }}</p>
     </div>
 
     <nav class="sidebar-nav">
-      <RouterLink class="sidebar-link" to="/overview">Overview</RouterLink>
-      <RouterLink class="sidebar-link" to="/logs">Logs</RouterLink>
-      <RouterLink class="sidebar-link" to="/analytics">Analytics</RouterLink>
-      <RouterLink class="sidebar-link" to="/keys">Keys</RouterLink>
+      <RouterLink class="sidebar-link" to="/overview">{{ t.nav.overview }}</RouterLink>
+      <RouterLink class="sidebar-link" to="/logs">{{ t.nav.logs }}</RouterLink>
+      <RouterLink class="sidebar-link" to="/analytics">{{ t.nav.analytics }}</RouterLink>
+      <RouterLink class="sidebar-link" to="/keys">{{ t.nav.keys }}</RouterLink>
     </nav>
 
     <p class="sidebar-meta">
-      Archived VS Code plugin code stays under <code>vscode-plugin/</code>.
+      {{ t.nav.archivedPrefix }} <code>vscode-plugin/</code>。
     </p>
   </aside>
 </template>

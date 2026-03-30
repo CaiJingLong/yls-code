@@ -3,6 +3,7 @@ import { reactive, watch } from "vue";
 
 import CostTrendChart from "../components/charts/CostTrendChart.vue";
 import ModelCostPie from "../components/charts/ModelCostPie.vue";
+import { zhCN } from "../i18n/zhCN";
 import { queryAnalytics, queryOverview } from "../lib/tauri/query";
 import { accountsStore } from "../stores/accounts";
 import { syncStore } from "../stores/sync";
@@ -34,12 +35,14 @@ async function loadData() {
     ]);
     state.overview = overview;
     state.analytics = analytics;
-  } catch (error) {
-    state.error = error instanceof Error ? error.message : "Failed to load overview";
+  } catch {
+    state.error = zhCN.errors.loadOverview;
   } finally {
     state.loading = false;
   }
 }
+
+const t = zhCN;
 
 watch(
   () => [accountsStore.state.activeAccountId, state.granularity, syncStore.state.status, syncStore.state.progress?.jobId],
@@ -54,43 +57,43 @@ watch(
   <section class="page page-grid">
     <div class="page-title">
       <div>
-        <h2>Overview</h2>
-        <p>Usage totals, sync health, and model-level cost distribution.</p>
+        <h2>{{ t.overview.title }}</h2>
+        <p>{{ t.overview.subtitle }}</p>
       </div>
       <label class="field">
-        <span>Trend</span>
+        <span>{{ t.overview.trend }}</span>
         <select v-model="state.granularity">
-          <option value="day">By day</option>
-          <option value="hour">By hour</option>
+          <option value="day">{{ t.overview.byDay }}</option>
+          <option value="hour">{{ t.overview.byHour }}</option>
         </select>
       </label>
     </div>
 
     <div v-if="!accountsStore.state.activeAccountId" class="empty-state">
-      Add an account in the Keys tab to start syncing data.
+      {{ t.overview.emptyNoAccount }}
     </div>
     <div v-else-if="state.error" class="empty-state">{{ state.error }}</div>
     <template v-else>
       <div class="summary-grid">
         <article class="card">
-          <h3>Account</h3>
-          <div class="card-value">{{ state.overview?.accountName ?? "n/a" }}</div>
+          <h3>{{ t.overview.account }}</h3>
+          <div class="card-value">{{ state.overview?.accountName ?? t.common.noValue }}</div>
           <p>{{ state.overview?.baseUrl }}</p>
         </article>
         <article class="card">
-          <h3>Cached Logs</h3>
+          <h3>{{ t.overview.cachedLogs }}</h3>
           <div class="card-value">{{ state.overview?.cachedLogCount ?? 0 }}</div>
-          <p>{{ state.overview?.latestLogAt ?? "No local logs yet" }}</p>
+          <p>{{ state.overview?.latestLogAt ?? t.overview.noLocalLogs }}</p>
         </article>
         <article class="card">
-          <h3>Total Cost</h3>
+          <h3>{{ t.overview.totalCost }}</h3>
           <div class="card-value">${{ (state.overview?.totalCostUsd ?? 0).toFixed(4) }}</div>
-          <p>Aggregated from local SQLite logs</p>
+          <p>{{ t.overview.aggregatedFromLocal }}</p>
         </article>
         <article class="card">
-          <h3>Total Tokens</h3>
+          <h3>{{ t.overview.totalTokens }}</h3>
           <div class="card-value">{{ state.overview?.totalTokens ?? 0 }}</div>
-          <p>Last sync: {{ state.overview?.lastSuccessfulSyncAt ?? "never" }}</p>
+          <p>{{ t.overview.lastSyncPrefix }}{{ state.overview?.lastSuccessfulSyncAt ?? t.overview.never }}</p>
         </article>
       </div>
 
@@ -100,7 +103,7 @@ watch(
           :data="state.analytics?.trend ?? []"
           :granularity="state.granularity"
           :loading="state.loading"
-          title="Local USD Trend"
+          :title="t.overview.localUsdTrend"
         />
       </div>
     </template>

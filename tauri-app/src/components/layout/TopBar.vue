@@ -1,26 +1,33 @@
 <script setup lang="ts">
 import { computed, watch } from "vue";
 
+import { formatSyncProgress, zhCN } from "../../i18n/zhCN";
 import { accountsStore } from "../../stores/accounts";
 import { preferencesStore } from "../../stores/preferences";
 import { syncStore } from "../../stores/sync";
+
+const t = zhCN;
 
 const statusText = computed(() => {
   const progress = syncStore.state.progress;
 
   if (syncStore.state.status === "running" && progress) {
-    return `Syncing ${progress.kind}: page ${progress.scannedPages}, +${progress.insertedRows}`;
+    return formatSyncProgress(
+      progress.kind,
+      progress.scannedPages,
+      progress.insertedRows,
+    );
   }
 
   if (syncStore.state.status === "failed") {
-    return syncStore.state.error ?? "Sync failed";
+    return t.topBar.syncFailed;
   }
 
   if (syncStore.state.status === "completed") {
-    return "Sync completed";
+    return t.topBar.syncCompleted;
   }
 
-  return "Idle";
+  return t.topBar.idle;
 });
 
 watch(
@@ -35,12 +42,12 @@ watch(
   <header class="topbar">
     <div class="topbar-group">
       <label class="topbar-field">
-        <span>Account</span>
+        <span>{{ t.topBar.account }}</span>
         <select
           :value="accountsStore.state.activeAccountId ?? ''"
           @change="accountsStore.setActiveAccount(($event.target as HTMLSelectElement).value || null)"
         >
-          <option value="">No account</option>
+          <option value="">{{ t.topBar.noAccount }}</option>
           <option v-for="item in accountsStore.state.items" :key="item.id" :value="item.id">
             {{ item.name }}
           </option>
@@ -53,21 +60,21 @@ watch(
           :disabled="!accountsStore.state.activeAccountId || syncStore.state.status === 'running'"
           @click="syncStore.trigger('incremental')"
         >
-          Sync now
+          {{ t.topBar.syncNow }}
         </button>
         <button
           class="ghost"
           :disabled="!accountsStore.state.activeAccountId || syncStore.state.status === 'running'"
           @click="syncStore.trigger('full')"
         >
-          Full sync
+          {{ t.topBar.fullSync }}
         </button>
       </div>
     </div>
 
     <div class="topbar-group">
       <label class="topbar-field">
-        <span>Theme</span>
+        <span>{{ t.topBar.theme }}</span>
         <select
           :value="preferencesStore.state.themeMode"
           @change="
@@ -76,14 +83,14 @@ watch(
             )
           "
         >
-          <option value="system">System</option>
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
+          <option value="system">{{ t.topBar.themeSystem }}</option>
+          <option value="light">{{ t.topBar.themeLight }}</option>
+          <option value="dark">{{ t.topBar.themeDark }}</option>
         </select>
       </label>
 
       <label class="topbar-field">
-        <span>Polling</span>
+        <span>{{ t.topBar.polling }}</span>
         <select
           :value="preferencesStore.state.pollingIntervalMs"
           :disabled="!preferencesStore.state.pollingEnabled"
@@ -96,13 +103,13 @@ watch(
       </label>
 
       <label class="topbar-field">
-        <span>Auto sync</span>
+        <span>{{ t.topBar.autoSync }}</span>
         <select
           :value="preferencesStore.state.pollingEnabled ? 'on' : 'off'"
           @change="preferencesStore.setPollingEnabled(($event.target as HTMLSelectElement).value === 'on')"
         >
-          <option value="on">Enabled</option>
-          <option value="off">Disabled</option>
+          <option value="on">{{ t.topBar.autoSyncEnabled }}</option>
+          <option value="off">{{ t.topBar.autoSyncDisabled }}</option>
         </select>
       </label>
 

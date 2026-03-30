@@ -6,6 +6,7 @@ import {
   saveAccount as saveAccountCommand,
   setAccountEnabled as setAccountEnabledCommand,
 } from "../lib/tauri/accounts";
+import { zhCN } from "../i18n/zhCN";
 import { isTauriRuntime } from "../lib/tauri/runtime";
 import type { AccountSummary, SaveAccountInput } from "../types/accounts";
 
@@ -59,8 +60,8 @@ async function loadAccounts() {
       state.activeAccountId = state.items[0]?.id ?? null;
       persistActiveAccountId();
     }
-  } catch (error) {
-    state.error = error instanceof Error ? error.message : "Failed to load accounts";
+  } catch {
+    state.error = zhCN.errors.loadAccounts;
   } finally {
     state.loading = false;
   }

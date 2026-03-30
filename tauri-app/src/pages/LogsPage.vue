@@ -2,6 +2,7 @@
 import { reactive, watch } from "vue";
 
 import LogsTable from "../components/logs/LogsTable.vue";
+import { zhCN } from "../i18n/zhCN";
 import { queryLogs } from "../lib/tauri/query";
 import { accountsStore } from "../stores/accounts";
 import { syncStore } from "../stores/sync";
@@ -42,12 +43,14 @@ async function loadLogs() {
       createdAfter: filters.createdAfter || null,
       createdBefore: filters.createdBefore || null,
     });
-  } catch (error) {
-    state.error = error instanceof Error ? error.message : "Failed to query logs";
+  } catch {
+    state.error = zhCN.errors.loadLogs;
   } finally {
     state.loading = false;
   }
 }
+
+const t = zhCN;
 
 watch(
   () => [accountsStore.state.activeAccountId, syncStore.state.progress?.jobId],
@@ -62,50 +65,50 @@ watch(
   <section class="page page-grid">
     <div class="page-title">
       <div>
-        <h2>Logs</h2>
-        <p>Search and page through normalized local log records.</p>
+        <h2>{{ t.logs.title }}</h2>
+        <p>{{ t.logs.subtitle }}</p>
       </div>
-      <button class="secondary" :disabled="state.loading" @click="loadLogs">Refresh</button>
+      <button class="secondary" :disabled="state.loading" @click="loadLogs">{{ t.common.refresh }}</button>
     </div>
 
     <div v-if="!accountsStore.state.activeAccountId" class="empty-state">
-      Select or create an account first.
+      {{ t.logs.emptyNoAccount }}
     </div>
     <template v-else>
       <section class="card stack">
         <div class="filters">
           <label class="field">
-            <span>Search</span>
-            <input v-model="filters.search" placeholder="model / reasoning / raw json" />
+            <span>{{ t.logs.search }}</span>
+            <input v-model="filters.search" :placeholder="t.logs.searchPlaceholder" />
           </label>
           <label class="field">
-            <span>Model</span>
-            <input v-model="filters.model" placeholder="gpt-5.4" />
+            <span>{{ t.logs.model }}</span>
+            <input v-model="filters.model" :placeholder="t.logs.modelPlaceholder" />
           </label>
           <label class="field">
-            <span>Created After</span>
-            <input v-model="filters.createdAfter" placeholder="2026-03-29T00:00:00.000Z" />
+            <span>{{ t.logs.createdAfter }}</span>
+            <input v-model="filters.createdAfter" :placeholder="t.logs.createdAfterPlaceholder" />
           </label>
           <label class="field">
-            <span>Created Before</span>
-            <input v-model="filters.createdBefore" placeholder="2026-03-30T23:59:59.000Z" />
+            <span>{{ t.logs.createdBefore }}</span>
+            <input v-model="filters.createdBefore" :placeholder="t.logs.createdBeforePlaceholder" />
           </label>
         </div>
         <div class="actions">
           <button class="secondary" :disabled="state.loading" @click="filters.page = 1; loadLogs()">
-            Apply Filters
+            {{ t.logs.applyFilters }}
           </button>
         </div>
       </section>
 
       <section class="table-panel">
         <header class="table-header">
-          <h2>Recent Logs</h2>
-          <span class="tag">{{ state.response?.total ?? 0 }} total</span>
+          <h2>{{ t.logs.recentLogs }}</h2>
+          <span class="tag">共 {{ state.response?.total ?? 0 }} {{ t.logs.totalSuffix }}</span>
         </header>
         <div v-if="state.error" class="panel-empty">{{ state.error }}</div>
-        <div v-else-if="state.loading" class="panel-empty">Loading logs...</div>
-        <div v-else-if="!(state.response?.items.length)" class="panel-empty">No logs matched this query.</div>
+        <div v-else-if="state.loading" class="panel-empty">{{ t.logs.loading }}</div>
+        <div v-else-if="!(state.response?.items.length)" class="panel-empty">{{ t.logs.noResults }}</div>
         <LogsTable v-else :items="state.response.items" />
       </section>
 
@@ -115,14 +118,14 @@ watch(
           :disabled="filters.page <= 1 || state.loading"
           @click="filters.page -= 1; loadLogs()"
         >
-          Previous
+          {{ t.common.previous }}
         </button>
         <button
           class="secondary"
           :disabled="state.loading || (state.response ? filters.page * filters.pageSize >= state.response.total : true)"
           @click="filters.page += 1; loadLogs()"
         >
-          Next
+          {{ t.common.next }}
         </button>
       </div>
     </template>

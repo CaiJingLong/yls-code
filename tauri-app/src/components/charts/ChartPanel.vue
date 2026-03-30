@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
+import { zhCN } from "../../i18n/zhCN";
 import { init, type ECharts, type EChartsOption } from "../../lib/echarts";
 
 const props = defineProps<{
@@ -13,6 +14,7 @@ const props = defineProps<{
 const root = ref<HTMLDivElement | null>(null);
 let chart: ECharts | undefined;
 let resizeObserver: ResizeObserver | undefined;
+const t = zhCN;
 
 function renderChart() {
   if (!root.value || props.empty) {
@@ -65,8 +67,8 @@ onBeforeUnmount(() => {
     <header class="panel-header">
       <h2>{{ title }}</h2>
     </header>
-    <div v-if="loading" class="panel-empty">Loading chart...</div>
-    <div v-else-if="empty" class="panel-empty">No data</div>
+    <div v-if="loading" class="panel-empty">{{ t.common.loadingChart }}</div>
+    <div v-else-if="empty" class="panel-empty">{{ t.common.noData }}</div>
     <div v-else ref="root" class="chart-root"></div>
   </section>
 </template>

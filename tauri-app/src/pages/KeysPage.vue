@@ -2,6 +2,7 @@
 import { computed, reactive } from "vue";
 
 import AccountForm from "../components/keys/AccountForm.vue";
+import { zhCN } from "../i18n/zhCN";
 import { accountsStore } from "../stores/accounts";
 import type { SaveAccountInput } from "../types/accounts";
 
@@ -35,8 +36,8 @@ async function handleSubmit(input: SaveAccountInput) {
   try {
     await accountsStore.saveAccount(input);
     state.editing = null;
-  } catch (error) {
-    state.error = error instanceof Error ? error.message : "Failed to save account";
+  } catch {
+    state.error = zhCN.errors.saveAccount;
   } finally {
     state.loading = false;
   }
@@ -51,8 +52,8 @@ async function handleDelete(id: string) {
     if (state.editing?.id === id) {
       state.editing = null;
     }
-  } catch (error) {
-    state.error = error instanceof Error ? error.message : "Failed to delete account";
+  } catch {
+    state.error = zhCN.errors.deleteAccount;
   } finally {
     state.loading = false;
   }
@@ -64,20 +65,22 @@ async function toggleEnabled(id: string, enabled: boolean) {
 
   try {
     await accountsStore.setAccountEnabled(id, enabled);
-  } catch (error) {
-    state.error = error instanceof Error ? error.message : "Failed to update account";
+  } catch {
+    state.error = zhCN.errors.updateAccount;
   } finally {
     state.loading = false;
   }
 }
+
+const t = zhCN;
 </script>
 
 <template>
   <section class="page page-grid">
     <div class="page-title">
       <div>
-        <h2>Keys</h2>
-        <p>Manage account metadata and securely stored API keys.</p>
+        <h2>{{ t.keys.title }}</h2>
+        <p>{{ t.keys.subtitle }}</p>
       </div>
     </div>
 
@@ -86,19 +89,19 @@ async function toggleEnabled(id: string, enabled: boolean) {
     <div class="page-grid" style="grid-template-columns: 1.2fr 1fr;">
       <section class="table-panel">
         <header class="table-header">
-          <h2>Accounts</h2>
-          <button class="ghost" @click="state.editing = null">New</button>
+          <h2>{{ t.keys.accounts }}</h2>
+          <button class="ghost" @click="state.editing = null">{{ t.common.create }}</button>
         </header>
-        <div v-if="accountsStore.state.loading" class="panel-empty">Loading accounts...</div>
-        <div v-else-if="!items.length" class="panel-empty">No accounts configured yet.</div>
+        <div v-if="accountsStore.state.loading" class="panel-empty">{{ t.keys.loadingAccounts }}</div>
+        <div v-else-if="!items.length" class="panel-empty">{{ t.keys.noAccounts }}</div>
         <div v-else class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Name</th>
-                <th>URL</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th>{{ t.keys.columnName }}</th>
+                <th>{{ t.keys.columnUrl }}</th>
+                <th>{{ t.keys.columnStatus }}</th>
+                <th>{{ t.keys.columnActions }}</th>
               </tr>
             </thead>
             <tbody>
@@ -106,14 +109,14 @@ async function toggleEnabled(id: string, enabled: boolean) {
                 <td>{{ item.name }}</td>
                 <td>{{ item.baseUrl }}</td>
                 <td>
-                  <span class="tag">{{ item.enabled ? "Enabled" : "Disabled" }}</span>
+                  <span class="tag">{{ item.enabled ? t.common.enabled : t.common.disabled }}</span>
                 </td>
                 <td class="actions">
-                  <button class="secondary" :disabled="state.loading" @click="editAccount(item.id)">Edit</button>
+                  <button class="secondary" :disabled="state.loading" @click="editAccount(item.id)">{{ t.common.edit }}</button>
                   <button class="ghost" :disabled="state.loading" @click="toggleEnabled(item.id, !item.enabled)">
-                    {{ item.enabled ? "Disable" : "Enable" }}
+                    {{ item.enabled ? t.common.disable : t.common.enable }}
                   </button>
-                  <button class="ghost" :disabled="state.loading" @click="handleDelete(item.id)">Delete</button>
+                  <button class="ghost" :disabled="state.loading" @click="handleDelete(item.id)">{{ t.common.delete }}</button>
                 </td>
               </tr>
             </tbody>
