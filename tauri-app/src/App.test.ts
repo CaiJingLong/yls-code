@@ -6,7 +6,7 @@ import App from "./App.vue";
 import { createAppRouter } from "./router";
 
 describe("App", () => {
-  it("renders the workbench title and shell navigation", async () => {
+  it("renders the app title and shell navigation", async () => {
     const router = createAppRouter(true);
     router.push("/overview");
     await router.isReady();
@@ -17,9 +17,7 @@ describe("App", () => {
     });
     await nextTick();
 
-    expect(wrapper.get("[data-testid='app-title']").text()).toContain(
-      "YLS Desktop Workbench",
-    );
+    expect(wrapper.get("[data-testid='app-title']").text()).toContain("yls-code");
     expect(wrapper.get("[data-testid='shell-nav']")).toBeDefined();
   });
 });

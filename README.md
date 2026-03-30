@@ -1,6 +1,6 @@
-# YLS Desktop Workbench
+# yls-code
 
-This repository now hosts the desktop version of the YLS usage workbench.
+This repository now hosts the desktop version of `yls-code`.
 
 ## Repository Layout
 
@@ -53,7 +53,7 @@ This opens the active Tauri app from `tauri-app/`.
 ## Output
 
 - Frontend build output: `tauri-app/dist/`
-- Desktop app bundle output: `tauri-app/src-tauri/target/release/bundle/macos/`
+- Desktop app bundle output: `tauri-app/src-tauri/target/release/bundle/macos/yls-code.app`
 
 ## Notes
 

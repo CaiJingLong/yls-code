@@ -1,6 +1,6 @@
-# YLS Desktop Workbench
+# yls-code
 
-This directory contains the active Tauri desktop application for YLS usage analysis.
+This directory contains the active Tauri desktop application for `yls-code`.
 
 ## Stack
 

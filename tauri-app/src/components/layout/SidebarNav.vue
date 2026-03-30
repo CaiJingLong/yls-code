@@ -2,7 +2,7 @@
   <aside class="sidebar" data-testid="shell-nav">
     <div class="brand">
       <p class="brand-kicker">YLS</p>
-      <h1 class="brand-title" data-testid="app-title">YLS Desktop Workbench</h1>
+      <h1 class="brand-title" data-testid="app-title">yls-code</h1>
       <p class="brand-subtitle">Local-first usage control center</p>
     </div>
 
