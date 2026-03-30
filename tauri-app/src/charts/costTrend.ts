@@ -1,0 +1,59 @@
+import type { EChartsOption } from "../lib/echarts";
+import type { TrendPoint } from "../types/query";
+import type { AnalyticsGranularity } from "../types/query";
+import type { ResolvedTheme } from "../composables/useResolvedTheme";
+
+export function createCostTrendOption(
+  data: TrendPoint[],
+  theme: ResolvedTheme,
+  granularity: AnalyticsGranularity,
+): EChartsOption {
+  return {
+    backgroundColor: "transparent",
+    tooltip: {
+      trigger: "axis",
+      valueFormatter: (value: number) => `$${Number(value).toFixed(4)}`,
+    },
+    grid: {
+      left: 10,
+      right: 16,
+      top: 20,
+      bottom: granularity === "hour" ? 42 : 24,
+    },
+    xAxis: {
+      type: "category",
+      data: data.map((item) => item.bucket),
+      axisLabel: {
+        color: theme === "dark" ? "#bba993" : "#665648",
+        hideOverlap: true,
+        rotate: granularity === "hour" ? 24 : 0,
+        fontSize: 11,
+      },
+    },
+    yAxis: {
+      type: "value",
+      axisLabel: {
+        color: theme === "dark" ? "#bba993" : "#665648",
+        formatter: (value: number) => `$${value.toFixed(value < 1 ? 2 : 1)}`,
+      },
+    },
+    series: [
+      {
+        name: "USD",
+        type: "line",
+        smooth: true,
+        data: data.map((item) => item.totalCostUsd),
+        areaStyle: {
+          color: theme === "dark" ? "rgba(255, 155, 87, 0.16)" : "rgba(198, 91, 33, 0.14)",
+        },
+        itemStyle: {
+          color: "#ff8c42",
+        },
+        lineStyle: {
+          color: "#ff8c42",
+          width: 3,
+        },
+      },
+    ],
+  };
+}

@@ -1,11 +1,14 @@
 {
   "name": "yls-workbench",
   "private": true,
-  "packageManager": "bun@1.3.2",
+  "packageManager": "bun@1.3.10",
   "scripts": {
     "verify:repo-layout": "node scripts/verify-repo-layout.mjs",
-    "dev": "bun --cwd tauri-app run tauri dev",
-    "build": "bun --cwd tauri-app run tauri build",
-    "test": "bun --cwd tauri-app run test && cargo test --manifest-path tauri-app/src-tauri/Cargo.toml"
+    "dev": "bun run --cwd tauri-app tauri dev",
+    "build:web": "bun run --cwd tauri-app build",
+    "build": "bun run --cwd tauri-app tauri build --bundles app",
+    "test:web": "bun run --cwd tauri-app test",
+    "test:rust": "cargo +1.88.0 test --manifest-path tauri-app/src-tauri/Cargo.toml",
+    "test": "bun run test:web && bun run test:rust"
   }
 }
