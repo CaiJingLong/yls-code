@@ -1,6 +1,7 @@
 pub mod app_state;
 pub mod commands;
 pub mod db;
+pub mod events;
 pub mod models;
 pub mod services;
 
@@ -30,6 +31,7 @@ pub fn run() {
             commands::accounts::list_accounts,
             commands::accounts::save_account,
             commands::accounts::set_account_enabled,
+            commands::sync::start_sync,
         ])
         .setup(|app| {
             let state = initialize_app_state(app.handle())?;

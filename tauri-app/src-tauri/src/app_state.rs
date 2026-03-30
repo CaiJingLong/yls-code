@@ -1,4 +1,8 @@
-use std::{path::PathBuf, sync::Arc};
+use std::{
+    collections::HashSet,
+    path::PathBuf,
+    sync::{Arc, Mutex},
+};
 
 use crate::services::secret_store::SecretStore;
 
@@ -6,6 +10,7 @@ use crate::services::secret_store::SecretStore;
 pub struct AppState {
     pub db_path: PathBuf,
     pub secret_store: Arc<dyn SecretStore>,
+    pub active_sync_accounts: Arc<Mutex<HashSet<String>>>,
 }
 
 impl AppState {
@@ -13,6 +18,7 @@ impl AppState {
         Self {
             db_path,
             secret_store,
+            active_sync_accounts: Arc::new(Mutex::new(HashSet::new())),
         }
     }
 }

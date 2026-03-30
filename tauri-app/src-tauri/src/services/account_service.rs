@@ -139,6 +139,27 @@ impl AccountService {
         Ok(())
     }
 
+    pub fn load_account_sync_credentials(
+        state: &AppState,
+        account_id: &str,
+    ) -> Result<(String, String)> {
+        let connection = Self::open_connection(state)?;
+        let base_url = connection
+            .query_row(
+                "SELECT base_url FROM accounts WHERE id = ?1",
+                [account_id],
+                |row| row.get::<_, String>(0),
+            )
+            .optional()?
+            .with_context(|| format!("account `{account_id}` was not found"))?;
+        let api_key = state
+            .secret_store
+            .load_api_key(account_id)?
+            .with_context(|| format!("account `{account_id}` is missing an API key"))?;
+
+        Ok((base_url, api_key))
+    }
+
     fn get_account_summary(
         state: &AppState,
         connection: &Connection,
