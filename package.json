@@ -1,108 +1,11 @@
 {
-  "name": "yls-code",
-  "displayName": "YLS Code",
-  "description": "VS Code sidebar dashboard for YLS Codex usage",
-  "version": "0.0.1",
-  "publisher": "yls",
-  "license": "MIT",
+  "name": "yls-workbench",
   "private": true,
-  "engines": {
-    "vscode": "^1.110.0"
-  },
-  "categories": [
-    "Other",
-    "Visualization"
-  ],
-  "activationEvents": [
-    "onView:ylsCode.dashboardView",
-    "onCommand:ylsCode.openSettings",
-    "onCommand:ylsCode.refresh"
-  ],
-  "main": "./dist/extension.js",
-  "contributes": {
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "ylsCode",
-          "title": "YLS Code",
-          "icon": "resources/activity.svg"
-        }
-      ]
-    },
-    "views": {
-      "ylsCode": [
-        {
-          "id": "ylsCode.dashboardView",
-          "name": "Usage Dashboard"
-        }
-      ]
-    },
-    "commands": [
-      {
-        "command": "ylsCode.openSettings",
-        "title": "YLS Code: Open Settings"
-      },
-      {
-        "command": "ylsCode.refresh",
-        "title": "YLS Code: Refresh Dashboard"
-      }
-    ],
-    "configuration": {
-      "title": "YLS Code",
-      "properties": {
-        "ylsCode.apiKey": {
-          "type": "string",
-          "default": "",
-          "markdownDescription": "YLS Codex API Key，使用 `Authorization: Bearer <apiKey>` 调用接口。"
-        },
-        "ylsCode.baseUrl": {
-          "type": "string",
-          "default": "https://code.ylsagi.com",
-          "markdownDescription": "YLS Codex 接口基础地址。"
-        },
-        "ylsCode.themeMode": {
-          "type": "string",
-          "default": "system",
-          "enum": [
-            "system",
-            "light",
-            "dark"
-          ],
-          "markdownDescription": "面板主题模式，可跟随 VS Code 主题或手动指定。"
-        },
-        "ylsCode.pageSize": {
-          "type": "number",
-          "default": 10,
-          "minimum": 1,
-          "maximum": 100,
-          "markdownDescription": "最近记录列表每页加载条数。"
-        }
-      }
-    }
-  },
+  "packageManager": "bun@1.3.2",
   "scripts": {
-    "build": "bun run build:webview && bun run build:extension",
-    "build:extension": "node esbuild.mjs",
-    "build:webview": "bun run --cwd webview-ui build",
-    "dev:webview": "bun run --cwd webview-ui dev",
-    "watch:extension": "node esbuild.mjs --watch",
-    "watch:webview": "bun run --cwd webview-ui build --watch",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:webview": "bun run --cwd webview-ui test",
-    "test:extension": "bun run build:extension && bun src/test/runTest.ts",
-    "package:vsix": "bun run build && vsce package",
-    "vscode:prepublish": "bun run build"
-  },
-  "devDependencies": {
-    "@types/mocha": "^10.0.10",
-    "@types/node": "^25.5.0",
-    "@types/vscode": "^1.110.0",
-    "@vscode/test-electron": "^2.5.2",
-    "@vscode/vsce": "^3.7.1",
-    "esbuild": "^0.27.4",
-    "mocha": "^11.7.5",
-    "typescript": "^6.0.2",
-    "vitest": "^4.1.2"
+    "verify:repo-layout": "node scripts/verify-repo-layout.mjs",
+    "dev": "bun --cwd tauri-app run tauri dev",
+    "build": "bun --cwd tauri-app run tauri build",
+    "test": "bun --cwd tauri-app run test && cargo test --manifest-path tauri-app/src-tauri/Cargo.toml"
   }
 }

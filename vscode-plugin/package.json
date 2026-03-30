@@ -1,0 +1,115 @@
+{
+  "name": "yls-code",
+  "displayName": "YLS Code",
+  "description": "VS Code sidebar dashboard for YLS Codex usage",
+  "version": "0.0.1",
+  "publisher": "yls",
+  "license": "MIT",
+  "icon": "resources/logo2.png",
+  "private": true,
+  "engines": {
+    "vscode": "^1.110.0"
+  },
+  "categories": [
+    "Other",
+    "Visualization"
+  ],
+  "activationEvents": [
+    "onView:ylsCode.dashboardView",
+    "onCommand:ylsCode.openSettings",
+    "onCommand:ylsCode.refresh"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ylsCode",
+          "title": "YLS Code",
+          "icon": "resources/activity.svg"
+        }
+      ]
+    },
+    "views": {
+      "ylsCode": [
+        {
+          "id": "ylsCode.dashboardView",
+          "name": "Usage Dashboard",
+          "type": "webview"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "ylsCode.openSettings",
+        "title": "YLS Code: Open Settings"
+      },
+      {
+        "command": "ylsCode.refresh",
+        "title": "YLS Code: Refresh Dashboard"
+      }
+    ],
+    "configuration": {
+      "title": "YLS Code",
+      "properties": {
+        "ylsCode.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "YLS Codex API Key，使用 `Authorization: Bearer <apiKey>` 调用接口。"
+        },
+        "ylsCode.baseUrl": {
+          "type": "string",
+          "default": "https://code.ylsagi.com",
+          "markdownDescription": "YLS Codex 接口基础地址。"
+        },
+        "ylsCode.themeMode": {
+          "type": "string",
+          "default": "system",
+          "enum": [
+            "system",
+            "light",
+            "dark"
+          ],
+          "markdownDescription": "面板主题模式，可跟随 VS Code 主题或手动指定。"
+        },
+        "ylsCode.pageSize": {
+          "type": "number",
+          "default": 500,
+          "minimum": 1,
+          "maximum": 1000,
+          "markdownDescription": "最近记录列表每页加载条数。"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "bun run build:webview && bun run build:extension",
+    "build:extension": "node esbuild.mjs",
+    "build:extension-tests": "node esbuild.mjs --tests",
+    "build:webview": "bun run --cwd webview-ui build",
+    "dev:webview": "bun run --cwd webview-ui dev",
+    "watch:extension": "node esbuild.mjs --watch",
+    "watch:webview": "bun run --cwd webview-ui build --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:webview": "bun run --cwd webview-ui test",
+    "test:extension": "bun run build:extension && bun run build:extension-tests && bun src/test/runTest.ts",
+    "package:vsix": "bun run build && vsce package --allow-missing-repository -o yls-code.vsix",
+    "install:vsix": "bun run package:vsix && code --install-extension ./yls-code.vsix --force",
+    "vscode:prepublish": "bun run build"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^25.5.0",
+    "@types/vscode": "^1.110.0",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.7.1",
+    "esbuild": "^0.27.4",
+    "mocha": "^11.7.5",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
+  },
+  "dependencies": {
+    "sql.js": "^1.14.1"
+  }
+}
