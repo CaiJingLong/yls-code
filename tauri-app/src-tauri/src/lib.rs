@@ -31,6 +31,9 @@ pub fn run() {
             commands::accounts::list_accounts,
             commands::accounts::save_account,
             commands::accounts::set_account_enabled,
+            commands::query::query_analytics,
+            commands::query::query_logs,
+            commands::query::query_overview,
             commands::sync::start_sync,
         ])
         .setup(|app| {
