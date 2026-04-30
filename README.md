@@ -6,10 +6,6 @@ This repository now hosts the desktop version of `yls-code`.
 
 - `tauri-app/`
   - Active Tauri desktop application
-- `vscode-plugin/`
-  - Archived VS Code plugin source and related design docs
-- `docs/plans/`
-  - Active design and implementation plans for the desktop app
 
 ## Local Setup
 
@@ -35,8 +31,6 @@ This opens the active Tauri app from `tauri-app/`.
 
 ## Root Scripts
 
-- `bun run verify:repo-layout`
-  - Verify the archive and app directories are present and generated output is kept out of the archive tree
 - `bun run dev`
   - Start the Tauri desktop app in development mode
 - `bun run test`
@@ -57,5 +51,4 @@ This opens the active Tauri app from `tauri-app/`.
 
 ## Notes
 
-- The archived plugin source remains available under `vscode-plugin/`
 - Current desktop build scripts assume the local Rust toolchain pinned in `tauri-app/rust-toolchain.toml`

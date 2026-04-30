@@ -9,8 +9,3 @@ tauri-app/dist
 tauri-app/node_modules
 tauri-app/src-tauri/target
 tauri-app/src-tauri/gen
-vscode-plugin/dist
-vscode-plugin/node_modules
-vscode-plugin/.vscode-test
-vscode-plugin/webview-ui/dist
-vscode-plugin/webview-ui/node_modules

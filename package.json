@@ -3,7 +3,6 @@
   "private": true,
   "packageManager": "bun@1.3.10",
   "scripts": {
-    "verify:repo-layout": "node scripts/verify-repo-layout.mjs",
     "dev": "bun run --cwd tauri-app tauri dev",
     "build:web": "bun run --cwd tauri-app build",
     "build": "bun run --cwd tauri-app tauri build --bundles app",
