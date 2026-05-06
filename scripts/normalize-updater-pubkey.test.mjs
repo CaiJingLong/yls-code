@@ -2,7 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { Buffer } from "node:buffer";
 
-import { normalizeUpdaterPubkey } from "./normalize-updater-pubkey.mjs";
+import {
+  decodeNormalizedUpdaterPubkey,
+  normalizeUpdaterPubkey,
+  writeUpdaterPubkeyToTauriConfig,
+} from "./normalize-updater-pubkey.mjs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 
 const rawPublicKeyBytes = Buffer.from([
   0x45, 0x64,
@@ -29,6 +36,31 @@ test("keeps a boxed updater public key unchanged", () => {
   const encodedBoxedPublicKey = Buffer.from(boxedPublicKey, "utf8").toString("base64");
 
   assert.equal(normalizeUpdaterPubkey(encodedBoxedPublicKey), encodedBoxedPublicKey);
+});
+
+test("decodes normalized key into boxed minisign format", () => {
+  const encodedRawPublicKey = Buffer.from(rawPublicKey, "utf8").toString("base64");
+
+  assert.equal(decodeNormalizedUpdaterPubkey(encodedRawPublicKey), boxedPublicKey);
+});
+
+test("writes normalized pubkey into tauri config", () => {
+  const directory = mkdtempSync(join(tmpdir(), "yls-code-updater-pubkey-"));
+  const tauriConfigPath = join(directory, "tauri.conf.json");
+  const encodedRawPublicKey = Buffer.from(rawPublicKey, "utf8").toString("base64");
+
+  writeFileSync(
+    tauriConfigPath,
+    `${JSON.stringify({ plugins: { updater: { pubkey: "" } } }, null, 2)}\n`,
+  );
+
+  writeUpdaterPubkeyToTauriConfig({
+    encodedValue: encodedRawPublicKey,
+    tauriConfigPath,
+  });
+
+  const updatedConfig = JSON.parse(readFileSync(tauriConfigPath, "utf8"));
+  assert.equal(updatedConfig.plugins.updater.pubkey, boxedPublicKey);
 });
 
 test("rejects invalid base64 input", () => {

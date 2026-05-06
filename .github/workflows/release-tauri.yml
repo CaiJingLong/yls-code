@@ -121,6 +121,7 @@ jobs:
       - name: Normalize updater public key
         env:
           TAURI_UPDATER_PUBKEY: ${{ secrets.TAURI_UPDATER_PUBKEY }}
+          TAURI_CONFIG_PATH: tauri-app/src-tauri/tauri.conf.json
         run: node ./scripts/normalize-updater-pubkey.mjs
 
       - name: Build and upload release assets
@@ -169,6 +170,7 @@ jobs:
       - name: Normalize updater public key
         env:
           TAURI_UPDATER_PUBKEY: ${{ secrets.TAURI_UPDATER_PUBKEY }}
+          TAURI_CONFIG_PATH: tauri-app/src-tauri/tauri.conf.json
         run: node ./scripts/normalize-updater-pubkey.mjs
 
       - name: Build and upload release assets

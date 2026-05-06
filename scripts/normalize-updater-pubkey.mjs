@@ -1,5 +1,6 @@
 import { Buffer } from "node:buffer";
-import { appendFileSync } from "node:fs";
+import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const BOX_COMMENT_PREFIX = "untrusted comment: minisign public key: ";
@@ -61,12 +62,43 @@ export function normalizeUpdaterPubkey(encodedValue) {
   return Buffer.from(boxedPublicKey, "utf8").toString("base64");
 }
 
+export function decodeNormalizedUpdaterPubkey(encodedValue) {
+  return decodeBase64Strict(
+    normalizeUpdaterPubkey(encodedValue),
+    "normalized updater public key",
+  ).toString("utf8");
+}
+
+export function writeUpdaterPubkeyToTauriConfig({
+  encodedValue,
+  tauriConfigPath,
+}) {
+  const resolvedConfigPath = resolve(tauriConfigPath);
+  const tauriConfig = JSON.parse(readFileSync(resolvedConfigPath, "utf8"));
+
+  if (!tauriConfig.plugins?.updater) {
+    throw new Error("tauri config missing plugins.updater section");
+  }
+
+  tauriConfig.plugins.updater.pubkey = decodeNormalizedUpdaterPubkey(encodedValue);
+  writeFileSync(resolvedConfigPath, `${JSON.stringify(tauriConfig, null, 2)}\n`);
+}
+
 function main() {
-  const normalized = normalizeUpdaterPubkey(process.env.TAURI_UPDATER_PUBKEY ?? "");
+  const encodedValue = process.env.TAURI_UPDATER_PUBKEY ?? "";
+  const normalized = normalizeUpdaterPubkey(encodedValue);
   const githubEnvPath = process.env.GITHUB_ENV;
+  const tauriConfigPath = process.env.TAURI_CONFIG_PATH;
 
   if (githubEnvPath) {
     appendFileSync(githubEnvPath, `TAURI_UPDATER_PUBKEY=${normalized}\n`);
+  }
+
+  if (tauriConfigPath) {
+    writeUpdaterPubkeyToTauriConfig({ encodedValue, tauriConfigPath });
+  }
+
+  if (githubEnvPath) {
     return;
   }
 
