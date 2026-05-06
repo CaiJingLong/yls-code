@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import { Buffer } from "node:buffer";
 
 import {
-  decodeNormalizedUpdaterPubkey,
   normalizeUpdaterPubkey,
   writeUpdaterPubkeyToTauriConfig,
 } from "./normalize-updater-pubkey.mjs";
@@ -38,12 +37,6 @@ test("keeps a boxed updater public key unchanged", () => {
   assert.equal(normalizeUpdaterPubkey(encodedBoxedPublicKey), encodedBoxedPublicKey);
 });
 
-test("decodes normalized key into boxed minisign format", () => {
-  const encodedRawPublicKey = Buffer.from(rawPublicKey, "utf8").toString("base64");
-
-  assert.equal(decodeNormalizedUpdaterPubkey(encodedRawPublicKey), boxedPublicKey);
-});
-
 test("writes normalized pubkey into tauri config", () => {
   const directory = mkdtempSync(join(tmpdir(), "yls-code-updater-pubkey-"));
   const tauriConfigPath = join(directory, "tauri.conf.json");
@@ -60,7 +53,10 @@ test("writes normalized pubkey into tauri config", () => {
   });
 
   const updatedConfig = JSON.parse(readFileSync(tauriConfigPath, "utf8"));
-  assert.equal(updatedConfig.plugins.updater.pubkey, boxedPublicKey);
+  assert.equal(
+    updatedConfig.plugins.updater.pubkey,
+    Buffer.from(boxedPublicKey, "utf8").toString("base64"),
+  );
 });
 
 test("rejects invalid base64 input", () => {

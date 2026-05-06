@@ -62,13 +62,6 @@ export function normalizeUpdaterPubkey(encodedValue) {
   return Buffer.from(boxedPublicKey, "utf8").toString("base64");
 }
 
-export function decodeNormalizedUpdaterPubkey(encodedValue) {
-  return decodeBase64Strict(
-    normalizeUpdaterPubkey(encodedValue),
-    "normalized updater public key",
-  ).toString("utf8");
-}
-
 export function writeUpdaterPubkeyToTauriConfig({
   encodedValue,
   tauriConfigPath,
@@ -80,7 +73,7 @@ export function writeUpdaterPubkeyToTauriConfig({
     throw new Error("tauri config missing plugins.updater section");
   }
 
-  tauriConfig.plugins.updater.pubkey = decodeNormalizedUpdaterPubkey(encodedValue);
+  tauriConfig.plugins.updater.pubkey = normalizeUpdaterPubkey(encodedValue);
   writeFileSync(resolvedConfigPath, `${JSON.stringify(tauriConfig, null, 2)}\n`);
 }
 
