@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use mockito::{Matcher, Server};
 use rusqlite::Connection;
 use tempfile::{tempdir, TempDir};
@@ -9,7 +7,6 @@ use tauri_app_lib::{
     db::bootstrap_database_at,
     services::{
         account_service::{AccountService, SaveAccountInput},
-        secret_store::MemorySecretStore,
         sync_engine::SyncEngine,
         sync_progress::{SyncKind, SyncProgressEvent, SyncStatus},
     },
@@ -39,7 +36,7 @@ fn sample_log_item(index: usize) -> serde_json::Value {
 
 #[test]
 fn full_sync_fetches_pages_until_end_and_deduplicates_rows() {
-    let (state, _store, _tempdir) = test_state();
+    let (state, _tempdir) = test_state();
     let mut server = Server::new();
     let first_page_items = (0..200).map(sample_log_item).collect::<Vec<_>>();
     let mut second_page_items = vec![sample_log_item(199)];
@@ -102,14 +99,18 @@ fn full_sync_fetches_pages_until_end_and_deduplicates_rows() {
 
     let connection = Connection::open(&state.db_path).expect("open sqlite db");
     let log_count: i64 = connection
-        .query_row("SELECT COUNT(1) FROM logs WHERE account_id = 'acct-sync'", [], |row| {
-            row.get(0)
-        })
+        .query_row(
+            "SELECT COUNT(1) FROM logs WHERE account_id = 'acct-sync'",
+            [],
+            |row| row.get(0),
+        )
         .expect("count logs");
     let job_status: String = connection
-        .query_row("SELECT status FROM sync_jobs ORDER BY started_at DESC LIMIT 1", [], |row| {
-            row.get(0)
-        })
+        .query_row(
+            "SELECT status FROM sync_jobs ORDER BY started_at DESC LIMIT 1",
+            [],
+            |row| row.get(0),
+        )
         .expect("read sync job status");
 
     let final_event = events.last().expect("final progress event");
@@ -120,14 +121,13 @@ fn full_sync_fetches_pages_until_end_and_deduplicates_rows() {
     assert_eq!(final_event.inserted_rows, 320);
 }
 
-fn test_state() -> (AppState, MemorySecretStore, TempDir) {
+fn test_state() -> (AppState, TempDir) {
     let tempdir = tempdir().expect("tempdir");
     let data_dir = tempdir.path().join("app-local-data");
     let db_path = bootstrap_database_at(&data_dir).expect("bootstrap database");
-    let store = MemorySecretStore::default();
-    let state = AppState::new(db_path, Arc::new(store.clone()));
+    let state = AppState::new(db_path);
 
-    (state, store, tempdir)
+    (state, tempdir)
 }
 
 fn seed_account(state: &AppState, base_url: &str) {

@@ -1,20 +1,15 @@
-use std::sync::Arc;
-
 use rusqlite::Connection;
 use tempfile::{tempdir, TempDir};
 
 use tauri_app_lib::{
     app_state::AppState,
     db::bootstrap_database_at,
-    services::{
-        account_service::{AccountService, SaveAccountInput},
-        secret_store::{MemorySecretStore, SecretStore},
-    },
+    services::account_service::{AccountService, SaveAccountInput},
 };
 
 #[test]
-fn save_account_persists_metadata_and_secret_outside_sqlite() {
-    let (state, store, _tempdir) = test_state();
+fn save_account_persists_metadata_and_secret_in_sqlite() {
+    let (state, _tempdir) = test_state();
 
     let account = AccountService::save_account(
         &state,
@@ -29,14 +24,6 @@ fn save_account_persists_metadata_and_secret_outside_sqlite() {
     .expect("save account");
 
     assert!(account.has_api_key);
-    assert_eq!(
-        store
-            .load_api_key(&account.id)
-            .expect("load stored api key")
-            .as_deref(),
-        Some("yls-secret")
-    );
-
     let connection = Connection::open(&state.db_path).expect("open sqlite database");
     let mut statement = connection
         .prepare("PRAGMA table_info(accounts)")
@@ -47,12 +34,21 @@ fn save_account_persists_metadata_and_secret_outside_sqlite() {
         .collect::<rusqlite::Result<Vec<_>>>()
         .expect("collect columns");
 
-    assert!(!columns.iter().any(|column| column == "api_key"));
+    assert!(columns.iter().any(|column| column == "api_key"));
+
+    let stored_api_key = connection
+        .query_row(
+            "SELECT api_key FROM accounts WHERE id = ?1",
+            [&account.id],
+            |row| row.get::<_, Option<String>>(0),
+        )
+        .expect("query stored api key");
+    assert_eq!(stored_api_key.as_deref(), Some("yls-secret"));
 }
 
 #[test]
 fn list_accounts_returns_sanitized_metadata() {
-    let (state, _, _tempdir) = test_state();
+    let (state, _tempdir) = test_state();
 
     AccountService::save_account(
         &state,
@@ -75,8 +71,8 @@ fn list_accounts_returns_sanitized_metadata() {
 }
 
 #[test]
-fn disable_and_delete_account_updates_sqlite_and_secret_state() {
-    let (state, store, _tempdir) = test_state();
+fn disable_and_delete_account_updates_sqlite_state() {
+    let (state, _tempdir) = test_state();
 
     let account = AccountService::save_account(
         &state,
@@ -121,9 +117,11 @@ fn disable_and_delete_account_updates_sqlite_and_secret_state() {
     AccountService::delete_account(&state, &account.id).expect("delete account");
 
     let remaining_accounts: i64 = connection
-        .query_row("SELECT COUNT(1) FROM accounts WHERE id = ?1", [&account.id], |row| {
-            row.get(0)
-        })
+        .query_row(
+            "SELECT COUNT(1) FROM accounts WHERE id = ?1",
+            [&account.id],
+            |row| row.get(0),
+        )
         .expect("count accounts");
     let remaining_sync_state: i64 = connection
         .query_row(
@@ -133,28 +131,23 @@ fn disable_and_delete_account_updates_sqlite_and_secret_state() {
         )
         .expect("count sync state");
     let remaining_logs: i64 = connection
-        .query_row("SELECT COUNT(1) FROM logs WHERE account_id = ?1", [&account.id], |row| {
-            row.get(0)
-        })
+        .query_row(
+            "SELECT COUNT(1) FROM logs WHERE account_id = ?1",
+            [&account.id],
+            |row| row.get(0),
+        )
         .expect("count logs");
 
     assert_eq!(remaining_accounts, 0);
     assert_eq!(remaining_sync_state, 0);
     assert_eq!(remaining_logs, 0);
-    assert_eq!(
-        store
-            .load_api_key(&account.id)
-            .expect("load deleted api key"),
-        None
-    );
 }
 
-fn test_state() -> (AppState, MemorySecretStore, TempDir) {
+fn test_state() -> (AppState, TempDir) {
     let tempdir = tempdir().expect("tempdir");
     let data_dir = tempdir.path().join("app-local-data");
     let db_path = bootstrap_database_at(&data_dir).expect("bootstrap database");
-    let store = MemorySecretStore::default();
-    let state = AppState::new(db_path, Arc::new(store.clone()));
+    let state = AppState::new(db_path);
 
-    (state, store, tempdir)
+    (state, tempdir)
 }

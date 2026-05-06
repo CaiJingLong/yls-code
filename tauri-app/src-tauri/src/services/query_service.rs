@@ -1,9 +1,5 @@
 use anyhow::{Context, Result};
-use rusqlite::{
-    params_from_iter,
-    types::Value,
-    Connection, OptionalExtension,
-};
+use rusqlite::{params_from_iter, types::Value, Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
 
 use crate::app_state::AppState;
@@ -77,6 +73,8 @@ pub enum AnalyticsGranularity {
 pub struct AnalyticsQueryInput {
     pub account_id: String,
     pub granularity: AnalyticsGranularity,
+    pub created_after: Option<String>,
+    pub created_before: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -109,7 +107,7 @@ impl QueryService {
         let connection = Self::open_connection(state)?;
         let account = connection
             .query_row(
-                "SELECT id, name, base_url, enabled FROM accounts WHERE id = ?1",
+                "SELECT id, name, base_url, enabled, api_key FROM accounts WHERE id = ?1",
                 [account_id],
                 |row| {
                     Ok((
@@ -117,12 +115,13 @@ impl QueryService {
                         row.get::<_, String>(1)?,
                         row.get::<_, String>(2)?,
                         row.get::<_, i64>(3)? != 0,
+                        row.get::<_, Option<String>>(4)?,
                     ))
                 },
             )
             .optional()?
             .with_context(|| format!("account `{account_id}` was not found"))?;
-        let api_key = state.secret_store.load_api_key(account_id)?;
+        let api_key = account.4.clone().filter(|value| !value.trim().is_empty());
         let today_remaining_quota = api_key
             .as_ref()
             .map(|api_key| {
@@ -233,10 +232,13 @@ impl QueryService {
         })
     }
 
-    pub fn query_analytics(state: &AppState, input: AnalyticsQueryInput) -> Result<AnalyticsResponse> {
+    pub fn query_analytics(
+        state: &AppState,
+        input: AnalyticsQueryInput,
+    ) -> Result<AnalyticsResponse> {
         let connection = Self::open_connection(state)?;
-        let model_breakdown = Self::query_model_breakdown(&connection, &input.account_id)?;
-        let trend = Self::query_trend(&connection, &input.account_id, input.granularity)?;
+        let model_breakdown = Self::query_model_breakdown(&connection, &input)?;
+        let trend = Self::query_trend(&connection, &input)?;
 
         Ok(AnalyticsResponse {
             model_breakdown,
@@ -244,20 +246,24 @@ impl QueryService {
         })
     }
 
-    fn query_model_breakdown(connection: &Connection, account_id: &str) -> Result<Vec<ModelCostPoint>> {
-        let mut statement = connection.prepare(
+    fn query_model_breakdown(
+        connection: &Connection,
+        input: &AnalyticsQueryInput,
+    ) -> Result<Vec<ModelCostPoint>> {
+        let (where_sql, params) = build_analytics_filters(input);
+        let sql = format!(
             "SELECT
                 COALESCE(model_name, 'Unknown') AS model_name,
                 COALESCE(SUM(total_cost_usd), 0) AS total_cost_usd,
                 COALESCE(SUM(total_tokens), 0) AS total_tokens,
                 COUNT(1) AS request_count
              FROM logs
-             WHERE account_id = ?1
+             WHERE {where_sql}
              GROUP BY COALESCE(model_name, 'Unknown')
-             ORDER BY total_cost_usd DESC, total_tokens DESC",
-        )?;
-
-        let rows = statement.query_map([account_id], |row| {
+             ORDER BY total_cost_usd DESC, total_tokens DESC"
+        );
+        let mut statement = connection.prepare(&sql)?;
+        let rows = statement.query_map(params_from_iter(params.iter()), |row| {
             Ok(ModelCostPoint {
                 model_name: row.get(0)?,
                 total_cost_usd: row.get(1)?,
@@ -271,13 +277,13 @@ impl QueryService {
 
     fn query_trend(
         connection: &Connection,
-        account_id: &str,
-        granularity: AnalyticsGranularity,
+        input: &AnalyticsQueryInput,
     ) -> Result<Vec<TrendPoint>> {
-        let bucket_sql = match granularity {
+        let bucket_sql = match input.granularity {
             AnalyticsGranularity::Hour => "substr(created_at, 1, 13) || ':00:00Z'",
             AnalyticsGranularity::Day => "substr(created_at, 1, 10)",
         };
+        let (where_sql, params) = build_analytics_filters(input);
         let sql = format!(
             "SELECT
                 {bucket_sql} AS bucket,
@@ -285,12 +291,12 @@ impl QueryService {
                 COALESCE(SUM(total_tokens), 0) AS total_tokens,
                 COUNT(1) AS request_count
              FROM logs
-             WHERE account_id = ?1
+             WHERE {where_sql}
              GROUP BY bucket
              ORDER BY bucket ASC"
         );
         let mut statement = connection.prepare(&sql)?;
-        let rows = statement.query_map([account_id], |row| {
+        let rows = statement.query_map(params_from_iter(params.iter()), |row| {
             Ok(TrendPoint {
                 bucket: row.get(0)?,
                 total_cost_usd: row.get(1)?,
@@ -316,7 +322,11 @@ fn build_logs_filters(input: &LogsQueryInput) -> (String, Vec<Value>) {
     let mut clauses = vec!["account_id = ?".to_string()];
     let mut params = vec![Value::from(input.account_id.clone())];
 
-    if let Some(search) = input.search.as_ref().filter(|value| !value.trim().is_empty()) {
+    if let Some(search) = input
+        .search
+        .as_ref()
+        .filter(|value| !value.trim().is_empty())
+    {
         let pattern = format!("%{}%", search.trim());
         clauses.push(
             "(COALESCE(model_name, '') LIKE ? OR COALESCE(reasoning, '') LIKE ? OR raw_json LIKE ?)".to_string(),
@@ -326,17 +336,54 @@ fn build_logs_filters(input: &LogsQueryInput) -> (String, Vec<Value>) {
         params.push(Value::from(pattern));
     }
 
-    if let Some(model) = input.model.as_ref().filter(|value| !value.trim().is_empty()) {
+    if let Some(model) = input
+        .model
+        .as_ref()
+        .filter(|value| !value.trim().is_empty())
+    {
         clauses.push("COALESCE(model_name, '') = ?".to_string());
         params.push(Value::from(model.trim().to_string()));
     }
 
-    if let Some(created_after) = input.created_after.as_ref().filter(|value| !value.trim().is_empty()) {
+    if let Some(created_after) = input
+        .created_after
+        .as_ref()
+        .filter(|value| !value.trim().is_empty())
+    {
         clauses.push("created_at >= ?".to_string());
         params.push(Value::from(created_after.trim().to_string()));
     }
 
-    if let Some(created_before) = input.created_before.as_ref().filter(|value| !value.trim().is_empty()) {
+    if let Some(created_before) = input
+        .created_before
+        .as_ref()
+        .filter(|value| !value.trim().is_empty())
+    {
+        clauses.push("created_at <= ?".to_string());
+        params.push(Value::from(created_before.trim().to_string()));
+    }
+
+    (clauses.join(" AND "), params)
+}
+
+fn build_analytics_filters(input: &AnalyticsQueryInput) -> (String, Vec<Value>) {
+    let mut clauses = vec!["account_id = ?".to_string()];
+    let mut params = vec![Value::from(input.account_id.clone())];
+
+    if let Some(created_after) = input
+        .created_after
+        .as_ref()
+        .filter(|value| !value.trim().is_empty())
+    {
+        clauses.push("created_at >= ?".to_string());
+        params.push(Value::from(created_after.trim().to_string()));
+    }
+
+    if let Some(created_before) = input
+        .created_before
+        .as_ref()
+        .filter(|value| !value.trim().is_empty())
+    {
         clauses.push("created_at <= ?".to_string());
         params.push(Value::from(created_before.trim().to_string()));
     }

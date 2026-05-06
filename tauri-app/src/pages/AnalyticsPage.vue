@@ -5,6 +5,7 @@ import CostTrendChart from "../components/charts/CostTrendChart.vue";
 import ModelCostPie from "../components/charts/ModelCostPie.vue";
 import PageHeader from "../components/layout/PageHeader.vue";
 import { zhCN } from "../i18n/zhCN";
+import { toUtcISOStringFromLocalInput } from "../lib/datetime";
 import { queryAnalytics } from "../lib/tauri/query";
 import { accountsStore } from "../stores/accounts";
 import { syncStore } from "../stores/sync";
@@ -13,6 +14,8 @@ import type { AnalyticsGranularity, AnalyticsResponse } from "../types/query";
 const state = reactive({
   loading: false,
   granularity: "hour" as AnalyticsGranularity,
+  createdAfter: "",
+  createdBefore: "",
   analytics: null as AnalyticsResponse | null,
   error: null as string | null,
 });
@@ -31,6 +34,8 @@ async function loadAnalytics() {
     state.analytics = await queryAnalytics({
       accountId,
       granularity: state.granularity,
+      createdAfter: toUtcISOStringFromLocalInput(state.createdAfter),
+      createdBefore: toUtcISOStringFromLocalInput(state.createdBefore),
     });
   } catch {
     state.error = zhCN.errors.loadAnalytics;
@@ -60,6 +65,17 @@ watch(
           <option value="day">{{ t.analytics.daily }}</option>
         </select>
       </label>
+      <label class="field">
+        <span>{{ t.analytics.createdAfter }}</span>
+        <input v-model="state.createdAfter" type="datetime-local" />
+      </label>
+      <label class="field">
+        <span>{{ t.analytics.createdBefore }}</span>
+        <input v-model="state.createdBefore" type="datetime-local" />
+      </label>
+      <button class="secondary" :disabled="state.loading" @click="loadAnalytics">
+        {{ t.analytics.applyFilters }}
+      </button>
     </PageHeader>
 
     <div v-if="!accountsStore.state.activeAccountId" class="empty-state">

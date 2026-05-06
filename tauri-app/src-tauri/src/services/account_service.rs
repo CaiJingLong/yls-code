@@ -35,7 +35,6 @@ pub struct AccountService;
 impl AccountService {
     pub fn save_account(state: &AppState, input: SaveAccountInput) -> Result<AccountSummary> {
         let account_id = input.id.unwrap_or_else(|| Uuid::new_v4().to_string());
-        state.secret_store.save_api_key(&account_id, &input.api_key)?;
 
         let connection = Self::open_connection(state)?;
         let now = current_timestamp();
@@ -51,30 +50,40 @@ impl AccountService {
 
         connection.execute(
             "INSERT INTO accounts (
-                id, name, base_url, enabled, created_at, updated_at, last_used_at
-             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, NULL)
+                id, name, base_url, api_key, enabled, created_at, updated_at, last_used_at
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, NULL)
              ON CONFLICT(id) DO UPDATE SET
                 name = excluded.name,
                 base_url = excluded.base_url,
+                api_key = excluded.api_key,
                 enabled = excluded.enabled,
                 updated_at = excluded.updated_at",
             params![
                 account_id,
                 input.name,
                 input.base_url,
+                input.api_key,
                 if enabled { 1 } else { 0 },
                 created_at,
                 now,
             ],
         )?;
 
-        Self::get_account_summary(state, &connection, &account_id)
+        Self::get_account_summary(&connection, &account_id)
     }
 
     pub fn list_accounts(state: &AppState) -> Result<Vec<AccountSummary>> {
         let connection = Self::open_connection(state)?;
         let mut statement = connection.prepare(
-            "SELECT id, name, base_url, enabled, created_at, updated_at, last_used_at
+            "SELECT
+                id,
+                name,
+                base_url,
+                enabled,
+                created_at,
+                updated_at,
+                last_used_at,
+                CASE WHEN TRIM(COALESCE(api_key, '')) <> '' THEN 1 ELSE 0 END AS has_api_key
              FROM accounts
              ORDER BY updated_at DESC, name ASC",
         )?;
@@ -88,14 +97,15 @@ impl AccountService {
                 row.get::<_, String>(4)?,
                 row.get::<_, String>(5)?,
                 row.get::<_, Option<String>>(6)?,
+                row.get::<_, i64>(7)? != 0,
             ))
         })?;
 
         let mut accounts = Vec::new();
 
         for row in rows {
-            let (id, name, base_url, enabled, created_at, updated_at, last_used_at) = row?;
-            let has_api_key = state.secret_store.load_api_key(&id)?.is_some();
+            let (id, name, base_url, enabled, created_at, updated_at, last_used_at, has_api_key) =
+                row?;
             accounts.push(AccountSummary {
                 id,
                 name,
@@ -124,7 +134,7 @@ impl AccountService {
             params![account_id, if enabled { 1 } else { 0 }, updated_at],
         )?;
 
-        Self::get_account_summary(state, &connection, account_id)
+        Self::get_account_summary(&connection, account_id)
     }
 
     pub fn delete_account(state: &AppState, account_id: &str) -> Result<()> {
@@ -134,7 +144,6 @@ impl AccountService {
         connection.execute("DELETE FROM sync_state WHERE account_id = ?1", [account_id])?;
         connection.execute("DELETE FROM logs WHERE account_id = ?1", [account_id])?;
         connection.execute("DELETE FROM accounts WHERE id = ?1", [account_id])?;
-        state.secret_store.delete_api_key(account_id)?;
 
         Ok(())
     }
@@ -152,19 +161,21 @@ impl AccountService {
             )
             .optional()?
             .with_context(|| format!("account `{account_id}` was not found"))?;
-        let api_key = state
-            .secret_store
-            .load_api_key(account_id)?
+        let api_key = connection
+            .query_row(
+                "SELECT api_key FROM accounts WHERE id = ?1",
+                [account_id],
+                |row| row.get::<_, Option<String>>(0),
+            )
+            .optional()?
+            .flatten()
+            .filter(|value| !value.trim().is_empty())
             .with_context(|| format!("account `{account_id}` is missing an API key"))?;
 
         Ok((base_url, api_key))
     }
 
-    fn get_account_summary(
-        state: &AppState,
-        connection: &Connection,
-        account_id: &str,
-    ) -> Result<AccountSummary> {
+    fn get_account_summary(connection: &Connection, account_id: &str) -> Result<AccountSummary> {
         let summary = connection
             .query_row(
                 "SELECT id, name, base_url, enabled, created_at, updated_at, last_used_at
@@ -187,8 +198,18 @@ impl AccountService {
             .optional()?
             .with_context(|| format!("account `{account_id}` was not found"))?;
 
+        let has_api_key = connection
+            .query_row(
+                "SELECT api_key FROM accounts WHERE id = ?1",
+                [account_id],
+                |row| row.get::<_, Option<String>>(0),
+            )
+            .optional()?
+            .flatten()
+            .is_some_and(|value| !value.trim().is_empty());
+
         Ok(AccountSummary {
-            has_api_key: state.secret_store.load_api_key(account_id)?.is_some(),
+            has_api_key,
             ..summary
         })
     }

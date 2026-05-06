@@ -74,10 +74,13 @@ export const zhCN = {
   },
   analytics: {
     title: "分析",
-    subtitle: "按模型、时间粒度和请求量查看成本构成。",
+    subtitle: "按模型、时间粒度、时间范围和请求量查看成本构成。",
     granularity: "统计粒度",
     hourly: "按小时",
     daily: "按天",
+    createdAfter: "开始时间",
+    createdBefore: "结束时间",
+    applyFilters: "应用筛选",
     emptyNoAccount: "请先选择账号后再查看分析数据。",
     costTrend: "成本趋势",
     modelRanking: "模型排行",
@@ -88,7 +91,7 @@ export const zhCN = {
   },
   keys: {
     title: "密钥管理",
-    subtitle: "管理账号元数据和安全存储的 API Key。",
+    subtitle: "管理账号元数据和本地 SQLite 中的 API Key。",
     accounts: "账号列表",
     loadingAccounts: "正在加载账号...",
     noAccounts: "暂未配置任何账号。",
@@ -114,7 +117,7 @@ export const zhCN = {
   accountForm: {
     editTitle: "编辑账号",
     addTitle: "新增账号",
-    subtitle: "账号元数据保存在 SQLite，API Key 保存在本机安全存储。",
+    subtitle: "账号元数据和 API Key 均保存在本地 SQLite。",
     name: "名称",
     namePlaceholder: "例如主账号",
     baseUrl: "接口地址",

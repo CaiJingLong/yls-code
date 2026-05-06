@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use mockito::{Matcher, Server};
 use rusqlite::Connection;
 use tempfile::{tempdir, TempDir};
@@ -9,7 +7,6 @@ use tauri_app_lib::{
     db::bootstrap_database_at,
     services::{
         account_service::{AccountService, SaveAccountInput},
-        secret_store::MemorySecretStore,
         sync_engine::SyncEngine,
         sync_progress::{SyncKind, SyncProgressEvent, SyncStatus},
     },
@@ -39,7 +36,7 @@ fn sample_log_item(index: usize) -> serde_json::Value {
 
 #[test]
 fn incremental_sync_stops_when_newest_page_has_no_new_rows() {
-    let (state, _store, _tempdir) = test_state();
+    let (state, _tempdir) = test_state();
     let mut server = Server::new();
 
     seed_account(&state, &server.url());
@@ -85,7 +82,7 @@ fn incremental_sync_stops_when_newest_page_has_no_new_rows() {
 
 #[test]
 fn incremental_sync_rejects_concurrent_runs_for_the_same_account() {
-    let (state, _store, _tempdir) = test_state();
+    let (state, _tempdir) = test_state();
     let server = Server::new();
     seed_account(&state, &server.url());
 
@@ -101,14 +98,13 @@ fn incremental_sync_rejects_concurrent_runs_for_the_same_account() {
     assert!(error.to_string().contains("already syncing"));
 }
 
-fn test_state() -> (AppState, MemorySecretStore, TempDir) {
+fn test_state() -> (AppState, TempDir) {
     let tempdir = tempdir().expect("tempdir");
     let data_dir = tempdir.path().join("app-local-data");
     let db_path = bootstrap_database_at(&data_dir).expect("bootstrap database");
-    let store = MemorySecretStore::default();
-    let state = AppState::new(db_path, Arc::new(store.clone()));
+    let state = AppState::new(db_path);
 
-    (state, store, tempdir)
+    (state, tempdir)
 }
 
 fn seed_account(state: &AppState, base_url: &str) {

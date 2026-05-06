@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS accounts (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   base_url TEXT NOT NULL,
+  api_key TEXT,
   enabled INTEGER NOT NULL,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
@@ -53,4 +54,9 @@ CREATE TABLE IF NOT EXISTS sync_jobs (
   started_at TEXT NOT NULL,
   finished_at TEXT,
   error_message TEXT
+);
+
+CREATE TABLE IF NOT EXISTS app_meta (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
 );

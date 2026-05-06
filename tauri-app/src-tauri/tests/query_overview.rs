@@ -1,16 +1,9 @@
-use std::sync::Arc;
-
 use mockito::Server;
 use rusqlite::Connection;
 use tempfile::{tempdir, TempDir};
 
 use tauri_app_lib::{
-    app_state::AppState,
-    db::bootstrap_database_at,
-    services::{
-        query_service::QueryService,
-        secret_store::{MemorySecretStore, SecretStore},
-    },
+    app_state::AppState, db::bootstrap_database_at, services::query_service::QueryService,
 };
 
 #[test]
@@ -48,7 +41,7 @@ fn query_overview_returns_account_usage_and_sync_metadata() {
             .to_string(),
         )
         .create();
-    let (state, _store, _tempdir) = seeded_state(&server.url());
+    let (state, _tempdir) = seeded_state(&server.url());
 
     let overview = QueryService::query_overview(&state, "acct-query").expect("query overview");
 
@@ -61,30 +54,26 @@ fn query_overview_returns_account_usage_and_sync_metadata() {
     assert_eq!(overview.today_remaining_quota, Some(87.5));
 }
 
-fn seeded_state(base_url: &str) -> (AppState, MemorySecretStore, TempDir) {
+fn seeded_state(base_url: &str) -> (AppState, TempDir) {
     let tempdir = tempdir().expect("tempdir");
     let data_dir = tempdir.path().join("app-local-data");
     let db_path = bootstrap_database_at(&data_dir).expect("bootstrap database");
-    let store = MemorySecretStore::default();
-    let state = AppState::new(db_path.clone(), Arc::new(store.clone()));
-    store
-        .save_api_key("acct-query", "yls-secret")
-        .expect("save api key");
+    let state = AppState::new(db_path.clone());
 
     let connection = Connection::open(db_path).expect("open sqlite db");
     seed_account(&connection, base_url);
     seed_logs(&connection);
     seed_sync_state(&connection);
 
-    (state, store, tempdir)
+    (state, tempdir)
 }
 
 fn seed_account(connection: &Connection, base_url: &str) {
     connection
         .execute(
             "INSERT INTO accounts (
-                id, name, base_url, enabled, created_at, updated_at, last_used_at
-             ) VALUES ('acct-query', 'Query Account', ?1, 1, '1', '2', NULL)",
+                id, name, base_url, api_key, enabled, created_at, updated_at, last_used_at
+             ) VALUES ('acct-query', 'Query Account', ?1, 'yls-secret', 1, '1', '2', NULL)",
             [base_url],
         )
         .expect("seed account");
@@ -92,9 +81,30 @@ fn seed_account(connection: &Connection, base_url: &str) {
 
 fn seed_logs(connection: &Connection) {
     let rows = [
-        ("log-1", "gpt-5.4", "xhigh", 0.006, 1200, "2026-03-29T10:00:00.000Z"),
-        ("log-2", "gpt-5.4-mini", "medium", 0.005, 1400, "2026-03-29T11:00:00.000Z"),
-        ("log-3", "gpt-5.4", "medium", 0.006, 1600, "2026-03-30T09:00:00.000Z"),
+        (
+            "log-1",
+            "gpt-5.4",
+            "xhigh",
+            0.006,
+            1200,
+            "2026-03-29T10:00:00.000Z",
+        ),
+        (
+            "log-2",
+            "gpt-5.4-mini",
+            "medium",
+            0.005,
+            1400,
+            "2026-03-29T11:00:00.000Z",
+        ),
+        (
+            "log-3",
+            "gpt-5.4",
+            "medium",
+            0.006,
+            1600,
+            "2026-03-30T09:00:00.000Z",
+        ),
     ];
 
     for (remote_id, model_name, reasoning, total_cost_usd, total_tokens, created_at) in rows {

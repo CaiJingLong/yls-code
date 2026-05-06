@@ -48,6 +48,8 @@ export type AnalyticsGranularity = "hour" | "day";
 export interface AnalyticsQueryInput {
   accountId: string;
   granularity: AnalyticsGranularity;
+  createdAfter?: string | null;
+  createdBefore?: string | null;
 }
 
 export interface ModelCostPoint {
