@@ -473,6 +473,17 @@ th {
   font-size: 0.82rem;
 }
 
+.update-notes {
+  margin: 0;
+  padding: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  color: var(--text);
+  background: var(--bg-elevated);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 @media (max-width: 980px) {
   .app-shell {
     grid-template-columns: 1fr;

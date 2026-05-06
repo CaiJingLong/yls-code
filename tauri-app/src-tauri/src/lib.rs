@@ -99,6 +99,12 @@ fn initialize_app_state(app_handle: &tauri::AppHandle) -> Result<AppState> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_process::init())
+        .plugin(
+            tauri_plugin_updater::Builder::new()
+                .pubkey(env!("TAURI_UPDATER_PUBKEY"))
+                .build(),
+        )
         .invoke_handler(tauri::generate_handler![
             commands::accounts::delete_account,
             commands::accounts::list_accounts,
