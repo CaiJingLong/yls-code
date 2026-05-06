@@ -118,7 +118,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build and upload release assets
-        uses: tauri-apps/tauri-action@v1
+        uses: tauri-apps/tauri-action@v0.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -135,7 +135,8 @@ jobs:
             - 支持 Windows x86 与 macOS Apple Silicon
           releaseDraft: false
           prerelease: false
-          uploadUpdaterJson: true
+          includeUpdaterJson: true
+          tauriScript: bun run tauri
           args: --target i686-pc-windows-msvc
 
   build-macos:
@@ -160,7 +161,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build and upload release assets
-        uses: tauri-apps/tauri-action@v1
+        uses: tauri-apps/tauri-action@v0.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -177,6 +178,7 @@ jobs:
             - 支持 Windows x86 与 macOS Apple Silicon
           releaseDraft: false
           prerelease: false
-          uploadUpdaterJson: true
+          includeUpdaterJson: true
+          tauriScript: bun run tauri
           updaterJsonPreferNsis: true
           args: --target aarch64-apple-darwin
