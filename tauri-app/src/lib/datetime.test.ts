@@ -35,17 +35,23 @@ describe("datetime helpers", () => {
     ).toBe("2026-03-29 18:00:00");
   });
 
-  it("supports an app-wide display timezone and converts local inputs back to UTC", () => {
+  it("uses the app-wide display timezone when converting local inputs back to UTC", () => {
     const originalTimeZone = getDisplayTimeZone();
-    const originalProcessTimeZone = process.env.TZ;
 
     try {
-      process.env.TZ = "Asia/Shanghai";
-      setDisplayTimeZone("Asia/Shanghai");
-      expect(formatDateTimeDisplay("2026-03-29T15:01:00.000Z")).toBe("2026-03-29 23:01:00");
-      expect(toUtcISOStringFromLocalInput("2026-03-29T23:01")).toBe("2026-03-29T15:01:00.000Z");
+      setDisplayTimeZone("America/Los_Angeles");
+      expect(formatDateTimeDisplay("2026-05-06T07:00:00.000Z")).toBe("2026-05-06 00:00:00");
+      expect(toUtcISOStringFromLocalInput("2026-05-06T00:00")).toBe("2026-05-06T07:00:00.000Z");
+      expect(toUtcISOStringFromLocalInput("2026-05-06 00:00:30")).toBe(
+        "2026-05-06T07:00:30.000Z",
+      );
+      expect(toUtcISOStringFromLocalInput("2026-05-06T23:59", { boundary: "end" })).toBe(
+        "2026-05-07T06:59:59.999Z",
+      );
+      expect(toUtcISOStringFromLocalInput("2026-05-06", { boundary: "end" })).toBe(
+        "2026-05-07T06:59:59.999Z",
+      );
     } finally {
-      process.env.TZ = originalProcessTimeZone;
       setDisplayTimeZone(originalTimeZone);
     }
   });

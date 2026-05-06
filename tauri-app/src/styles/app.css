@@ -75,6 +75,20 @@ code {
     monospace;
 }
 
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  color: var(--text);
+  font-family: inherit;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+
 .app-shell {
   display: grid;
   height: 100vh;
@@ -241,6 +255,15 @@ code {
   margin: 0;
 }
 
+.card h3 {
+  font-size: 1rem;
+}
+
+.panel h2,
+.table-panel h2 {
+  font-size: 1.35rem;
+}
+
 .card p {
   margin: 0.4rem 0 0;
   color: var(--text-muted);
@@ -249,6 +272,33 @@ code {
 .card-value {
   font-size: 1.8rem;
   line-height: 1;
+}
+
+.analytics-filter-state {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.analytics-filter-state-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.analytics-filter-state-row code {
+  padding: 0.18rem 0.48rem;
+  border-radius: 0.55rem;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.analytics-filter-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
 }
 
 .panel {
@@ -296,6 +346,20 @@ code {
 .field {
   display: grid;
   gap: 0.35rem;
+}
+
+.checkbox-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 48px;
+}
+
+.checkbox-field input {
+  width: 1rem;
+  height: 1rem;
+  padding: 0;
+  accent-color: var(--accent);
 }
 
 label {
@@ -382,6 +446,10 @@ th {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+}
+
+.page-title h2 {
+  font-size: 1.55rem;
 }
 
 .page-title p {

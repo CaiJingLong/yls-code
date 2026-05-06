@@ -1,57 +1,146 @@
 <script setup lang="ts">
-import { reactive, watch } from "vue";
+import { computed, reactive, watch } from "vue";
 
 import CostTrendChart from "../components/charts/CostTrendChart.vue";
 import ModelCostPie from "../components/charts/ModelCostPie.vue";
+import DateTimePicker from "../components/common/DateTimePicker.vue";
 import PageHeader from "../components/layout/PageHeader.vue";
 import { zhCN } from "../i18n/zhCN";
-import { toUtcISOStringFromLocalInput } from "../lib/datetime";
+import {
+  alignTrendPointsToDisplayGranularity,
+  resolveAnalyticsQueryGranularity,
+} from "../lib/analytics";
+import {
+  formatDateTimeDisplay,
+  toUtcISOStringFromLocalInput,
+} from "../lib/datetime";
+import { LocalStorageStore } from "../lib/localStorageStore";
 import { queryAnalytics } from "../lib/tauri/query";
 import { accountsStore } from "../stores/accounts";
 import { syncStore } from "../stores/sync";
 import type { AnalyticsGranularity, AnalyticsResponse } from "../types/query";
 
-const state = reactive({
-  loading: false,
+const filterStorage = new LocalStorageStore("yls-workbench.analytics.filters", {
   granularity: "hour" as AnalyticsGranularity,
   createdAfter: "",
   createdBefore: "",
+  mergeReasoningByModel: true,
+});
+const storedFilters = filterStorage.load();
+const state = reactive({
+  loading: false,
+  granularity: storedFilters.granularity,
+  createdAfter: storedFilters.createdAfter,
+  createdBefore: storedFilters.createdBefore,
+  mergeReasoningByModel: storedFilters.mergeReasoningByModel,
   analytics: null as AnalyticsResponse | null,
   error: null as string | null,
 });
+let latestRequestId = 0;
 
 async function loadAnalytics() {
+  const requestId = ++latestRequestId;
   const accountId = accountsStore.state.activeAccountId;
   if (!accountId) {
-    state.analytics = null;
+    if (requestId === latestRequestId) {
+      state.analytics = null;
+    }
     return;
   }
 
-  state.loading = true;
-  state.error = null;
+  if (requestId === latestRequestId) {
+    state.loading = true;
+    state.error = null;
+  }
 
   try {
-    state.analytics = await queryAnalytics({
+    const response = await queryAnalytics({
       accountId,
-      granularity: state.granularity,
+      granularity: resolveAnalyticsQueryGranularity(state.granularity),
       createdAfter: toUtcISOStringFromLocalInput(state.createdAfter),
-      createdBefore: toUtcISOStringFromLocalInput(state.createdBefore),
+      createdBefore: toUtcISOStringFromLocalInput(state.createdBefore, {
+        boundary: "end",
+      }),
+      mergeReasoningByModel: state.mergeReasoningByModel,
     });
+    if (requestId === latestRequestId) {
+      state.analytics = {
+        ...response,
+        trend: alignTrendPointsToDisplayGranularity(response.trend, state.granularity),
+      };
+    }
   } catch {
-    state.error = zhCN.errors.loadAnalytics;
+    if (requestId === latestRequestId) {
+      state.error = zhCN.errors.loadAnalytics;
+    }
   } finally {
-    state.loading = false;
+    if (requestId === latestRequestId) {
+      state.loading = false;
+    }
   }
 }
 
 const t = zhCN;
+const effectiveRangeText = computed(() => {
+  const after = toUtcISOStringFromLocalInput(state.createdAfter);
+  const before = toUtcISOStringFromLocalInput(state.createdBefore, {
+    boundary: "end",
+  });
+  const afterText =
+    formatDateTimeDisplay(after) ?? t.analytics.rangeStartDefault;
+  const beforeText =
+    formatDateTimeDisplay(before) ?? t.analytics.rangeEndDefault;
+
+  return `${afterText} ~ ${beforeText}`;
+});
+const filteredSummary = computed(() => {
+  const modelBreakdown = state.analytics?.modelBreakdown ?? [];
+  return modelBreakdown.reduce(
+    (acc, item) => {
+      acc.requests += item.requestCount;
+      acc.tokens += item.totalTokens;
+      acc.cost += item.totalCostUsd;
+      return acc;
+    },
+    { requests: 0, tokens: 0, cost: 0 },
+  );
+});
+const modelBreakdownTotalCost = computed(() => filteredSummary.value.cost);
+
+function formatCostPercentage(value: number) {
+  if (modelBreakdownTotalCost.value <= 0) {
+    return "0.0%";
+  }
+
+  return `${((value / modelBreakdownTotalCost.value) * 100).toFixed(1)}%`;
+}
 
 watch(
-  () => [accountsStore.state.activeAccountId, state.granularity, syncStore.state.progress?.jobId],
+  () => [
+    accountsStore.state.activeAccountId,
+    state.granularity,
+    state.createdAfter,
+    state.createdBefore,
+    state.mergeReasoningByModel,
+    syncStore.state.progress?.jobId,
+  ],
   () => {
     void loadAnalytics();
   },
   { immediate: true },
+);
+
+watch(
+  () => ({
+    granularity: state.granularity,
+    createdAfter: state.createdAfter,
+    createdBefore: state.createdBefore,
+    mergeReasoningByModel: state.mergeReasoningByModel,
+  }),
+  (filters) => {
+    filterStorage.save(filters);
+  },
+  { deep: true },
 );
 </script>
 
@@ -65,13 +154,11 @@ watch(
           <option value="day">{{ t.analytics.daily }}</option>
         </select>
       </label>
-      <label class="field">
-        <span>{{ t.analytics.createdAfter }}</span>
-        <input v-model="state.createdAfter" type="datetime-local" />
-      </label>
-      <label class="field">
-        <span>{{ t.analytics.createdBefore }}</span>
-        <input v-model="state.createdBefore" type="datetime-local" />
+      <DateTimePicker v-model="state.createdAfter" :label="t.analytics.createdAfter" />
+      <DateTimePicker v-model="state.createdBefore" :label="t.analytics.createdBefore" />
+      <label class="checkbox-field analytics-reasoning-merge">
+        <input v-model="state.mergeReasoningByModel" type="checkbox" />
+        <span>{{ t.analytics.mergeReasoningByModel }}</span>
       </label>
       <button class="secondary" :disabled="state.loading" @click="loadAnalytics">
         {{ t.analytics.applyFilters }}
@@ -83,6 +170,18 @@ watch(
     </div>
     <div v-else-if="state.error" class="empty-state">{{ state.error }}</div>
     <template v-else>
+      <section class="card analytics-filter-state">
+        <div class="analytics-filter-state-row">
+          <span class="tag">{{ t.analytics.effectiveRange }}</span>
+          <code>{{ effectiveRangeText }}</code>
+        </div>
+        <div class="analytics-filter-metrics">
+          <span>{{ t.analytics.filteredRequests }}: {{ filteredSummary.requests }}</span>
+          <span>{{ t.analytics.filteredTokens }}: {{ filteredSummary.tokens }}</span>
+          <span>{{ t.analytics.filteredCost }}: ${{ filteredSummary.cost.toFixed(4) }}</span>
+        </div>
+      </section>
+
       <div class="chart-grid">
         <ModelCostPie :data="state.analytics?.modelBreakdown ?? []" :loading="state.loading" />
         <CostTrendChart
@@ -103,6 +202,7 @@ watch(
               <tr>
                 <th>{{ t.analytics.columnModel }}</th>
                 <th>{{ t.analytics.columnCost }}</th>
+                <th>{{ t.analytics.columnPercentage }}</th>
                 <th>{{ t.analytics.columnTokens }}</th>
                 <th>{{ t.analytics.columnRequests }}</th>
               </tr>
@@ -111,6 +211,7 @@ watch(
               <tr v-for="item in state.analytics?.modelBreakdown ?? []" :key="item.modelName">
                 <td>{{ item.modelName }}</td>
                 <td>${{ item.totalCostUsd.toFixed(4) }}</td>
+                <td>{{ formatCostPercentage(item.totalCostUsd) }}</td>
                 <td>{{ item.totalTokens }}</td>
                 <td>{{ item.requestCount }}</td>
               </tr>

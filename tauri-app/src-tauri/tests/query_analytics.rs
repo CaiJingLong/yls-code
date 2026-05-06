@@ -18,6 +18,7 @@ fn query_analytics_aggregates_by_model_and_day() {
             granularity: AnalyticsGranularity::Day,
             created_after: None,
             created_before: None,
+            merge_reasoning_by_model: true,
         },
     )
     .expect("query analytics");
@@ -39,6 +40,7 @@ fn query_analytics_aggregates_by_hour() {
             granularity: AnalyticsGranularity::Hour,
             created_after: None,
             created_before: None,
+            merge_reasoning_by_model: true,
         },
     )
     .expect("query analytics");
@@ -59,6 +61,7 @@ fn query_analytics_supports_time_range_filters() {
             granularity: AnalyticsGranularity::Day,
             created_after: Some("2026-03-30T00:00:00.000Z".into()),
             created_before: Some("2026-03-30T23:59:59.000Z".into()),
+            merge_reasoning_by_model: true,
         },
     )
     .expect("query analytics with time filters");

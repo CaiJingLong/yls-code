@@ -25,6 +25,8 @@ vi.mock("../../lib/echarts", () => ({
 
 describe("ChartPanel", () => {
   it("keeps the existing chart visible without showing a loading state while refreshing", async () => {
+    echartsMocks.setOption.mockClear();
+
     const wrapper = mount(ChartPanel, {
       props: {
         title: "模型成本构成",
@@ -40,10 +42,12 @@ describe("ChartPanel", () => {
     await wrapper.setProps({
       loading: true,
       empty: false,
+      option: { series: [{ type: "pie", data: [{ value: 2, name: "gpt-5.4-mini" }] }] },
     });
     await nextTick();
 
     expect(wrapper.find(".chart-root").exists()).toBe(true);
     expect(wrapper.text()).not.toContain("图表加载中");
+    expect(echartsMocks.setOption).toHaveBeenCalled();
   });
 });

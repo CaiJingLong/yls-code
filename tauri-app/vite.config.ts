@@ -1,12 +1,18 @@
 import { defineConfig } from "vitest/config";
 import vue from "@vitejs/plugin-vue";
+import { quasar } from "@quasar/vite-plugin";
 
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vite.dev/config/
 export default defineConfig(async () => ({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    quasar({
+      sassVariables: false,
+    }),
+  ],
   test: {
     environment: "jsdom",
     globals: true,

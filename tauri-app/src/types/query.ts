@@ -50,6 +50,7 @@ export interface AnalyticsQueryInput {
   granularity: AnalyticsGranularity;
   createdAfter?: string | null;
   createdBefore?: string | null;
+  mergeReasoningByModel?: boolean;
 }
 
 export interface ModelCostPoint {

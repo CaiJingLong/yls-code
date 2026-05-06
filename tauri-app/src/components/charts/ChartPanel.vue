@@ -40,10 +40,6 @@ onMounted(() => {
 watch(
   () => [props.option, props.loading, props.empty],
   async () => {
-    if (props.loading) {
-      return;
-    }
-
     if (props.empty) {
       chart?.dispose();
       chart = undefined;

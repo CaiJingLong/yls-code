@@ -66,18 +66,11 @@ export function createCostTrendOption(
     series: [
       {
         name: "美元",
-        type: "line",
-        smooth: true,
+        type: "bar",
         data: data.map((item) => item.totalCostUsd),
-        areaStyle: {
-          color: theme === "dark" ? "rgba(255, 155, 87, 0.16)" : "rgba(198, 91, 33, 0.14)",
-        },
         itemStyle: {
           color: "#ff8c42",
-        },
-        lineStyle: {
-          color: "#ff8c42",
-          width: 3,
+          borderRadius: [6, 6, 0, 0],
         },
       },
     ],

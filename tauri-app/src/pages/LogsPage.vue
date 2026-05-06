@@ -1,22 +1,28 @@
 <script setup lang="ts">
 import { reactive, watch } from "vue";
 
+import DateTimePicker from "../components/common/DateTimePicker.vue";
 import PageHeader from "../components/layout/PageHeader.vue";
 import LogsTable from "../components/logs/LogsTable.vue";
 import { zhCN } from "../i18n/zhCN";
 import { toUtcISOStringFromLocalInput } from "../lib/datetime";
+import { LocalStorageStore } from "../lib/localStorageStore";
 import { queryLogs } from "../lib/tauri/query";
 import { accountsStore } from "../stores/accounts";
 import { syncStore } from "../stores/sync";
 import type { LogsQueryResponse } from "../types/query";
 
-const filters = reactive({
+const filterStorage = new LocalStorageStore("yls-workbench.logs.filters", {
   search: "",
   model: "",
   createdAfter: "",
   createdBefore: "",
-  page: 1,
   pageSize: 50,
+});
+const storedFilters = filterStorage.load();
+const filters = reactive({
+  ...storedFilters,
+  page: 1,
 });
 
 const state = reactive({
@@ -61,6 +67,20 @@ watch(
   },
   { immediate: true },
 );
+
+watch(
+  () => ({
+    search: filters.search,
+    model: filters.model,
+    createdAfter: filters.createdAfter,
+    createdBefore: filters.createdBefore,
+    pageSize: filters.pageSize,
+  }),
+  (value) => {
+    filterStorage.save(value);
+  },
+  { deep: true },
+);
 </script>
 
 <template>
@@ -83,14 +103,8 @@ watch(
             <span>{{ t.logs.model }}</span>
             <input v-model="filters.model" :placeholder="t.logs.modelPlaceholder" />
           </label>
-          <label class="field">
-            <span>{{ t.logs.createdAfter }}</span>
-            <input v-model="filters.createdAfter" type="datetime-local" />
-          </label>
-          <label class="field">
-            <span>{{ t.logs.createdBefore }}</span>
-            <input v-model="filters.createdBefore" type="datetime-local" />
-          </label>
+          <DateTimePicker v-model="filters.createdAfter" :label="t.logs.createdAfter" clearable />
+          <DateTimePicker v-model="filters.createdBefore" :label="t.logs.createdBefore" clearable />
         </div>
         <div class="actions">
           <button class="secondary" :disabled="state.loading" @click="filters.page = 1; loadLogs()">

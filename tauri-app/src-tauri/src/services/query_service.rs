@@ -75,6 +75,8 @@ pub struct AnalyticsQueryInput {
     pub granularity: AnalyticsGranularity,
     pub created_after: Option<String>,
     pub created_before: Option<String>,
+    #[serde(default = "default_merge_reasoning_by_model")]
+    pub merge_reasoning_by_model: bool,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -251,15 +253,24 @@ impl QueryService {
         input: &AnalyticsQueryInput,
     ) -> Result<Vec<ModelCostPoint>> {
         let (where_sql, params) = build_analytics_filters(input);
+        let model_group_sql = if input.merge_reasoning_by_model {
+            "COALESCE(model_name, 'Unknown')".to_string()
+        } else {
+            "COALESCE(model_name, 'Unknown') || ' / ' || CASE
+                WHEN TRIM(COALESCE(reasoning, '')) = '' THEN '无'
+                ELSE COALESCE(reasoning, '')
+             END"
+            .to_string()
+        };
         let sql = format!(
             "SELECT
-                COALESCE(model_name, 'Unknown') AS model_name,
+                {model_group_sql} AS model_name,
                 COALESCE(SUM(total_cost_usd), 0) AS total_cost_usd,
                 COALESCE(SUM(total_tokens), 0) AS total_tokens,
                 COUNT(1) AS request_count
              FROM logs
              WHERE {where_sql}
-             GROUP BY COALESCE(model_name, 'Unknown')
+             GROUP BY {model_group_sql}
              ORDER BY total_cost_usd DESC, total_tokens DESC"
         );
         let mut statement = connection.prepare(&sql)?;
@@ -366,6 +377,10 @@ fn build_logs_filters(input: &LogsQueryInput) -> (String, Vec<Value>) {
     (clauses.join(" AND "), params)
 }
 
+fn default_merge_reasoning_by_model() -> bool {
+    true
+}
+
 fn build_analytics_filters(input: &AnalyticsQueryInput) -> (String, Vec<Value>) {
     let mut clauses = vec!["account_id = ?".to_string()];
     let mut params = vec![Value::from(input.account_id.clone())];
@@ -389,4 +404,91 @@ fn build_analytics_filters(input: &AnalyticsQueryInput) -> (String, Vec<Value>) 
     }
 
     (clauses.join(" AND "), params)
+}
+
+#[cfg(test)]
+mod tests {
+    use rusqlite::{params, Connection};
+
+    use crate::{app_state::AppState, db};
+
+    use super::{AnalyticsGranularity, AnalyticsQueryInput, QueryService};
+
+    fn build_test_state() -> (tempfile::TempDir, AppState) {
+        let temp_dir = tempfile::tempdir().expect("create temp dir");
+        let db_path = db::bootstrap_database_at(temp_dir.path()).expect("bootstrap database");
+        let connection = Connection::open(&db_path).expect("open database");
+        connection
+            .execute(
+                "INSERT INTO accounts (id, name, base_url, api_key, enabled, created_at, updated_at)
+                 VALUES ('acct-test', 'Test', 'https://example.test', '', 1, '2026-05-06T00:00:00Z', '2026-05-06T00:00:00Z')",
+                [],
+            )
+            .expect("insert account");
+
+        for (remote_id, reasoning, total_cost, total_tokens) in [
+            ("log-high", "high", 0.3, 300_i64),
+            ("log-xhigh", "xhigh", 0.7, 700_i64),
+        ] {
+            connection
+                .execute(
+                    "INSERT INTO logs (
+                        account_id, remote_log_id, log_fingerprint, model_name, reasoning,
+                        total_cost_usd, total_tokens, created_at, raw_json
+                     )
+                     VALUES (?1, ?2, ?3, 'gpt-5.4', ?4, ?5, ?6, '2026-05-06T12:00:00Z', '{}')",
+                    params![
+                        "acct-test",
+                        remote_id,
+                        format!("fingerprint-{remote_id}"),
+                        reasoning,
+                        total_cost,
+                        total_tokens,
+                    ],
+                )
+                .expect("insert log");
+        }
+
+        (temp_dir, AppState::new(db_path))
+    }
+
+    #[test]
+    fn query_analytics_can_merge_or_split_reasoning_in_model_breakdown() {
+        let (_temp_dir, state) = build_test_state();
+
+        let merged = QueryService::query_analytics(
+            &state,
+            AnalyticsQueryInput {
+                account_id: "acct-test".to_string(),
+                granularity: AnalyticsGranularity::Hour,
+                created_after: None,
+                created_before: None,
+                merge_reasoning_by_model: true,
+            },
+        )
+        .expect("query merged analytics");
+
+        assert_eq!(merged.model_breakdown.len(), 1);
+        assert_eq!(merged.model_breakdown[0].model_name, "gpt-5.4");
+        assert_eq!(merged.model_breakdown[0].request_count, 2);
+
+        let split = QueryService::query_analytics(
+            &state,
+            AnalyticsQueryInput {
+                account_id: "acct-test".to_string(),
+                granularity: AnalyticsGranularity::Hour,
+                created_after: None,
+                created_before: None,
+                merge_reasoning_by_model: false,
+            },
+        )
+        .expect("query split analytics");
+
+        let names = split
+            .model_breakdown
+            .into_iter()
+            .map(|item| item.model_name)
+            .collect::<Vec<_>>();
+        assert_eq!(names, vec!["gpt-5.4 / xhigh", "gpt-5.4 / high"]);
+    }
 }

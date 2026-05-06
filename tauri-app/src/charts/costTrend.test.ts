@@ -22,4 +22,25 @@ describe("createCostTrendOption", () => {
     });
     expect((option.xAxis as { data: string[] }).data[0]).not.toContain("Z");
   });
+
+  it("uses a bar series for the cost trend", () => {
+    const option = createCostTrendOption(
+      [
+        {
+          bucket: "2026-03-29",
+          totalCostUsd: 1.23,
+          totalTokens: 123,
+          requestCount: 2,
+        },
+      ],
+      "light",
+      "day",
+    );
+
+    expect(option.series).toEqual([
+      expect.objectContaining({
+        type: "bar",
+      }),
+    ]);
+  });
 });
