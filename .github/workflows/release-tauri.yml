@@ -109,8 +109,9 @@ jobs:
         uses: oven-sh/setup-bun@v2
 
       - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
         with:
+          toolchain: 1.88.0
           targets: i686-pc-windows-msvc
 
       - name: Install frontend dependencies
@@ -152,8 +153,9 @@ jobs:
         uses: oven-sh/setup-bun@v2
 
       - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
         with:
+          toolchain: 1.88.0
           targets: aarch64-apple-darwin
 
       - name: Install frontend dependencies
