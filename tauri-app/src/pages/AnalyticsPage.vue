@@ -15,6 +15,7 @@ import {
   toUtcISOStringFromLocalInput,
 } from "../lib/datetime";
 import { LocalStorageStore } from "../lib/localStorageStore";
+import { formatCompactNumber } from "../lib/number";
 import { queryAnalytics } from "../lib/tauri/query";
 import { accountsStore } from "../stores/accounts";
 import { syncStore } from "../stores/sync";
@@ -175,7 +176,7 @@ watch(
         </div>
         <div class="analytics-filter-metrics">
           <span>{{ t("analytics.filteredRequests") }}: {{ filteredSummary.requests }}</span>
-          <span>{{ t("analytics.filteredTokens") }}: {{ filteredSummary.tokens }}</span>
+          <span>{{ t("analytics.filteredTokens") }}: {{ formatCompactNumber(filteredSummary.tokens) }}</span>
           <span>{{ t("analytics.filteredCost") }}: ${{ filteredSummary.cost.toFixed(4) }}</span>
         </div>
       </section>
@@ -210,7 +211,7 @@ watch(
                 <td>{{ item.modelName }}</td>
                 <td>${{ item.totalCostUsd.toFixed(4) }}</td>
                 <td>{{ formatCostPercentage(item.totalCostUsd) }}</td>
-                <td>{{ item.totalTokens }}</td>
+                <td>{{ formatCompactNumber(item.totalTokens) }}</td>
                 <td>{{ item.requestCount }}</td>
               </tr>
             </tbody>

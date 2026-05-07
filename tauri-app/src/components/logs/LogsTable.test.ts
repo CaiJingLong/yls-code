@@ -35,4 +35,26 @@ describe("LogsTable", () => {
     expect(wrapper.text()).not.toContain("1774851324");
     expect(wrapper.text()).not.toContain("2026-03-29T15:01:00.000Z");
   });
+
+  it("renders token counts with compact units", () => {
+    const wrapper = mountWithApp(LogsTable, {
+      props: {
+        items: [
+          {
+            id: 1,
+            remoteLogId: "log-1",
+            modelName: "gpt-5.4",
+            reasoning: "xhigh",
+            totalCostUsd: 0.12,
+            totalTokens: 1234,
+            createdAt: "2026-03-29T15:01:00.000Z",
+            rawJson: "{}",
+          },
+        ],
+      },
+    });
+
+    expect(wrapper.text()).toContain("1.2k");
+    expect(wrapper.text()).not.toContain("1234");
+  });
 });

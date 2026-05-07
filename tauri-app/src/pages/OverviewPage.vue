@@ -6,6 +6,7 @@ import CostTrendChart from "../components/charts/CostTrendChart.vue";
 import ModelCostPie from "../components/charts/ModelCostPie.vue";
 import PageHeader from "../components/layout/PageHeader.vue";
 import { formatDateTimeDisplay } from "../lib/datetime";
+import { formatCompactNumber } from "../lib/number";
 import { queryAnalytics, queryOverview } from "../lib/tauri/query";
 import { accountsStore } from "../stores/accounts";
 import { syncStore } from "../stores/sync";
@@ -103,7 +104,7 @@ watch(
         </article>
         <article class="card">
           <h3>{{ t("overview.totalTokens") }}</h3>
-          <div class="card-value">{{ state.overview?.totalTokens ?? 0 }}</div>
+          <div class="card-value">{{ formatCompactNumber(state.overview?.totalTokens ?? 0) }}</div>
           <p>
             {{ t("overview.lastSyncPrefix")
             }}{{ formatDateTimeDisplay(state.overview?.lastSuccessfulSyncAt) ?? t("overview.never") }}

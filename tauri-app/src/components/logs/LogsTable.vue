@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { formatDateTimeDisplay } from "../../lib/datetime";
+import { formatCompactNumber } from "../../lib/number";
 import { useI18n } from "vue-i18n";
 import type { LogListItem } from "../../types/query";
 
@@ -27,7 +28,7 @@ const { t } = useI18n();
           <td>{{ item.modelName }}</td>
           <td>{{ item.reasoning || t("logsTable.noReasoning") }}</td>
           <td>${{ item.totalCostUsd.toFixed(4) }}</td>
-          <td>{{ item.totalTokens }}</td>
+          <td>{{ formatCompactNumber(item.totalTokens) }}</td>
           <td>{{ formatDateTimeDisplay(item.createdAt) ?? t("common.noValue") }}</td>
         </tr>
       </tbody>

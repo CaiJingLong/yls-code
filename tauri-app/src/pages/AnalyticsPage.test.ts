@@ -195,4 +195,35 @@ describe("AnalyticsPage", () => {
     expect(rows[0]!.text()).toContain("75.0%");
     expect(rows[1]!.text()).toContain("25.0%");
   });
+
+  it("renders filtered and ranking token counts with compact units", async () => {
+    queryAnalyticsMock.mockResolvedValueOnce({
+      modelBreakdown: [
+        {
+          modelName: "gpt-5.4",
+          totalCostUsd: 3,
+          totalTokens: 1200,
+          requestCount: 3,
+        },
+        {
+          modelName: "gpt-5.4-mini",
+          totalCostUsd: 1,
+          totalTokens: 2300000,
+          requestCount: 1,
+        },
+      ],
+      trend: [],
+    });
+
+    const wrapper = mountPage();
+    await flushPromises();
+
+    const summaryText = wrapper.get(".analytics-filter-metrics").text();
+    expect(summaryText).toContain("筛选后 Token 数: 2.3m");
+    expect(summaryText).not.toContain("2301200");
+
+    const rows = wrapper.findAll("tbody tr");
+    expect(rows[0]!.text()).toContain("1.2k");
+    expect(rows[1]!.text()).toContain("2.3m");
+  });
 });
