@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
+import { VueMarkdownIt } from "@f3ve/vue-markdown-it";
 
 import PageHeader from "../components/layout/PageHeader.vue";
 import { isTauriRuntime } from "../lib/tauri/runtime";
@@ -13,6 +14,11 @@ import { updateStore } from "../stores/update";
 
 const { t } = useI18n();
 const canUseUpdater = computed(() => isTauriRuntime() && isUpdaterAvailable());
+const markdownOptions = {
+  html: false,
+  linkify: true,
+  breaks: true,
+};
 </script>
 
 <template>
@@ -146,7 +152,9 @@ const canUseUpdater = computed(() => isTauriRuntime() && isUpdaterAvailable());
 
         <div v-if="updateStore.state.hasUpdate && updateStore.state.notes" class="field">
           <span>{{ t("settings.updateNotes") }}</span>
-          <pre class="update-notes">{{ updateStore.state.notes }}</pre>
+          <div class="update-notes">
+            <VueMarkdownIt :source="updateStore.state.notes" :options="markdownOptions" />
+          </div>
         </div>
       </div>
     </section>
