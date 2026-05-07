@@ -1,6 +1,6 @@
 import { reactive } from "vue";
 
-import { zhCN } from "../i18n/zhCN";
+import { translate } from "../i18n";
 import { listenSyncProgress, startSync } from "../lib/tauri/sync";
 import { isTauriRuntime } from "../lib/tauri/runtime";
 import { accountsStore } from "./accounts";
@@ -24,7 +24,8 @@ async function ensureListener() {
   unlisten = await listenSyncProgress((event) => {
     state.progress = event;
     state.status = event.status;
-    state.error = event.status === "failed" ? event.message ?? zhCN.errors.syncFailed : null;
+    state.error =
+      event.status === "failed" ? event.message ?? translate("errors.syncFailed") : null;
   });
 }
 

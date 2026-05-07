@@ -1,15 +1,11 @@
-import { mount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
-import { Quasar } from "quasar";
 
 import DateTimePicker from "./DateTimePicker.vue";
+import { mountWithApp } from "../../test-utils";
 
 describe("DateTimePicker", () => {
   it("renders a stable display value for the selected datetime", () => {
-    const wrapper = mount(DateTimePicker, {
-      global: {
-        plugins: [[Quasar, {}]],
-      },
+    const wrapper = mountWithApp(DateTimePicker, {
       props: {
         label: "开始时间",
         modelValue: "2026-05-01T12:30",
@@ -21,10 +17,7 @@ describe("DateTimePicker", () => {
   });
 
   it("accepts typed datetime text and emits the normalized value", async () => {
-    const wrapper = mount(DateTimePicker, {
-      global: {
-        plugins: [[Quasar, {}]],
-      },
+    const wrapper = mountWithApp(DateTimePicker, {
       props: {
         label: "开始时间",
         modelValue: "",
@@ -38,10 +31,7 @@ describe("DateTimePicker", () => {
   });
 
   it("does not attach the popup trigger to the editable text input", () => {
-    const wrapper = mount(DateTimePicker, {
-      global: {
-        plugins: [[Quasar, {}]],
-      },
+    const wrapper = mountWithApp(DateTimePicker, {
       props: {
         label: "开始时间",
         modelValue: "",
@@ -53,10 +43,7 @@ describe("DateTimePicker", () => {
   });
 
   it("passes common input props through to Quasar input", () => {
-    const wrapper = mount(DateTimePicker, {
-      global: {
-        plugins: [[Quasar, {}]],
-      },
+    const wrapper = mountWithApp(DateTimePicker, {
       props: {
         label: "结束时间",
         modelValue: "",
@@ -68,6 +55,18 @@ describe("DateTimePicker", () => {
 
     expect(wrapper.find("input").attributes("placeholder")).toBe("选择结束时间");
     expect(wrapper.find("input").attributes()).toHaveProperty("disabled");
-    expect(wrapper.props("clearable")).toBe(true);
+    expect(wrapper.findComponent({ name: "QInput" }).props("clearable")).toBe(true);
+  });
+
+  it("uses the English datetime placeholder after locale switching", () => {
+    const wrapper = mountWithApp(DateTimePicker, {
+      props: {
+        label: "Start",
+        modelValue: "",
+      },
+    }, "en-US");
+
+    expect(wrapper.find("input").attributes("placeholder")).toBe("YYYY/MM/DD HH:mm");
+    expect(wrapper.text()).toContain("Start");
   });
 });

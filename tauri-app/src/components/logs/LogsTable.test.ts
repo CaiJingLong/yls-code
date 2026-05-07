@@ -1,11 +1,11 @@
-import { mount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
 
 import LogsTable from "./LogsTable.vue";
+import { mountWithApp } from "../../test-utils";
 
 describe("LogsTable", () => {
   it("formats created times instead of rendering raw epoch and ISO strings", () => {
-    const wrapper = mount(LogsTable, {
+    const wrapper = mountWithApp(LogsTable, {
       props: {
         items: [
           {

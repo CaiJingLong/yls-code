@@ -5,6 +5,8 @@ import {
   type ResolvedTheme,
   type ThemeMode,
 } from "../composables/useResolvedTheme";
+import { setLocale } from "../i18n";
+import { normalizeLocale, type AppLocale } from "../i18n/messages";
 
 const STORAGE_KEY = "yls-workbench.preferences";
 
@@ -12,6 +14,7 @@ interface StoredPreferences {
   themeMode?: ThemeMode;
   pollingEnabled?: boolean;
   pollingIntervalMs?: number;
+  locale?: AppLocale;
 }
 
 function loadStoredPreferences(): StoredPreferences {
@@ -37,6 +40,7 @@ const state = reactive({
   themeMode: stored.themeMode ?? "system",
   pollingEnabled: stored.pollingEnabled ?? true,
   pollingIntervalMs: stored.pollingIntervalMs ?? 15_000,
+  locale: normalizeLocale(stored.locale),
 });
 
 const resolvedTheme = computed<ResolvedTheme>(() => resolveTheme(state.themeMode));
@@ -49,6 +53,7 @@ watchEffect(() => {
         themeMode: state.themeMode,
         pollingEnabled: state.pollingEnabled,
         pollingIntervalMs: state.pollingIntervalMs,
+        locale: state.locale,
       }),
     );
   }
@@ -56,6 +61,8 @@ watchEffect(() => {
   if (typeof document !== "undefined") {
     document.documentElement.dataset.theme = resolvedTheme.value;
   }
+
+  setLocale(state.locale);
 });
 
 export const preferencesStore = {
@@ -69,5 +76,8 @@ export const preferencesStore = {
   },
   setPollingIntervalMs(intervalMs: number) {
     state.pollingIntervalMs = intervalMs;
+  },
+  setLocale(locale: AppLocale) {
+    state.locale = normalizeLocale(locale);
   },
 };

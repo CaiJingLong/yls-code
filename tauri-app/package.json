@@ -23,6 +23,7 @@
     "echarts": "^6.0.0",
     "quasar": "^2.19.3",
     "vue": "^3.5.13",
+    "vue-i18n": "^10.0.8",
     "vue-router": "^5.0.4"
   },
   "devDependencies": {

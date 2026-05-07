@@ -2,6 +2,7 @@
 import dayjs from "dayjs";
 import { QDate, QIcon, QInput, QPopupProxy, QSeparator, QTime } from "quasar";
 import { computed, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 
 const props = defineProps<{
   id?: string;
@@ -16,6 +17,7 @@ const emit = defineEmits<{
   "update:modelValue": [value: string];
 }>();
 
+const { t } = useI18n();
 const inputValue = ref(formatDisplayValue(props.modelValue));
 
 watch(
@@ -89,7 +91,7 @@ function updateInputValue(value: string | number | null) {
     :disable="disable"
     outlined
     mask="####/##/## ##:##"
-    :placeholder="placeholder ?? 'YYYY/MM/DD HH:mm'"
+    :placeholder="placeholder ?? t('common.dateTimePlaceholder')"
     :clearable="clearable"
     @update:model-value="updateInputValue"
   >

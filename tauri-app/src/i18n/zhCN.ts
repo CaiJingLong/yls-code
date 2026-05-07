@@ -1,5 +1,3 @@
-import type { SyncKind } from "../types/sync";
-
 export const zhCN = {
   common: {
     noData: "暂无数据",
@@ -17,6 +15,7 @@ export const zhCN = {
     enabled: "已启用",
     disabled: "已停用",
     noValue: "暂无",
+    dateTimePlaceholder: "YYYY/MM/DD HH:mm",
   },
   nav: {
     subtitle: "本地优先的用量工作台",
@@ -123,6 +122,10 @@ export const zhCN = {
     autoSyncDisabled: "关闭",
     updateSection: "应用更新",
     updateHint: "从 GitHub Release 检查并安装最新版本。",
+    languageSection: "语言设置",
+    language: "界面语言",
+    languageZhCN: "简体中文",
+    languageEnUS: "English",
     checkUpdate: "检查更新",
     installUpdate: "安装更新并重启",
     updateChecking: "正在检查更新...",
@@ -174,14 +177,9 @@ export const zhCN = {
     updateAccount: "更新账号失败",
     syncFailed: "同步失败",
   },
+  sync: {
+    kindFull: "全量",
+    kindIncremental: "增量",
+    progress: "正在{kind}同步：第 {scannedPages} 页，新增 {insertedRows} 条",
+  },
 } as const;
-
-export function formatSyncProgress(
-  kind: SyncKind,
-  scannedPages: number,
-  insertedRows: number,
-) {
-  const kindText = kind === "full" ? "全量" : "增量";
-
-  return `正在${kindText}同步：第 ${scannedPages} 页，新增 ${insertedRows} 条`;
-}

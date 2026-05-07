@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 
-import { zhCN } from "../../i18n/zhCN";
 import { init, type ECharts, type EChartsOption } from "../../lib/echarts";
 
 const props = defineProps<{
@@ -14,7 +14,7 @@ const props = defineProps<{
 const root = ref<HTMLDivElement | null>(null);
 let chart: ECharts | undefined;
 let resizeObserver: ResizeObserver | undefined;
-const t = zhCN;
+const { t } = useI18n();
 
 function renderChart() {
   if (!root.value || props.empty) {
@@ -64,7 +64,7 @@ onBeforeUnmount(() => {
       <h2>{{ title }}</h2>
     </header>
     <div v-if="empty" class="panel-empty">
-      {{ loading ? t.common.loadingChart : t.common.noData }}
+      {{ loading ? t("common.loadingChart") : t("common.noData") }}
     </div>
     <div v-else ref="root" class="chart-root"></div>
   </section>

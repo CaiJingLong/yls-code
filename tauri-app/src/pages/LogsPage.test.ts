@@ -1,8 +1,8 @@
-import { flushPromises, mount } from "@vue/test-utils";
+import { flushPromises } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { Quasar } from "quasar";
 
 import LogsPage from "./LogsPage.vue";
+import { mountWithApp } from "../test-utils";
 import type { LogsQueryInput } from "../types/query";
 
 const { queryLogsMock } = vi.hoisted(() => ({
@@ -48,11 +48,7 @@ describe("LogsPage", () => {
   });
 
   function mountPage() {
-    return mount(LogsPage, {
-      global: {
-        plugins: [[Quasar, {}]],
-      },
-    });
+    return mountWithApp(LogsPage);
   }
 
   function latestLogsCall() {

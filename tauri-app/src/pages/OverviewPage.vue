@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { reactive, watch } from "vue";
+import { useI18n } from "vue-i18n";
 
 import CostTrendChart from "../components/charts/CostTrendChart.vue";
 import ModelCostPie from "../components/charts/ModelCostPie.vue";
 import PageHeader from "../components/layout/PageHeader.vue";
-import { zhCN } from "../i18n/zhCN";
 import { formatDateTimeDisplay } from "../lib/datetime";
 import { queryAnalytics, queryOverview } from "../lib/tauri/query";
 import { accountsStore } from "../stores/accounts";
@@ -18,6 +18,7 @@ const state = reactive({
   granularity: "day" as AnalyticsGranularity,
   error: null as string | null,
 });
+const { t } = useI18n();
 
 async function loadData() {
   const accountId = accountsStore.state.activeAccountId;
@@ -38,17 +39,15 @@ async function loadData() {
     state.overview = overview;
     state.analytics = analytics;
   } catch {
-    state.error = zhCN.errors.loadOverview;
+    state.error = t("errors.loadOverview");
   } finally {
     state.loading = false;
   }
 }
 
-const t = zhCN;
-
 function formatQuotaValue(value: number | null | undefined) {
   if (value == null) {
-    return t.common.noValue;
+    return t("common.noValue");
   }
 
   return `$${value.toFixed(4)}`;
@@ -65,49 +64,49 @@ watch(
 
 <template>
   <section class="page page-grid">
-    <PageHeader :title="t.overview.title" :subtitle="t.overview.subtitle">
+    <PageHeader :title="t('overview.title')" :subtitle="t('overview.subtitle')">
       <label class="field">
-        <span>{{ t.overview.trend }}</span>
+        <span>{{ t("overview.trend") }}</span>
         <select v-model="state.granularity">
-          <option value="day">{{ t.overview.byDay }}</option>
-          <option value="hour">{{ t.overview.byHour }}</option>
+          <option value="day">{{ t("overview.byDay") }}</option>
+          <option value="hour">{{ t("overview.byHour") }}</option>
         </select>
       </label>
     </PageHeader>
 
     <div v-if="!accountsStore.state.activeAccountId" class="empty-state">
-      {{ t.overview.emptyNoAccount }}
+      {{ t("overview.emptyNoAccount") }}
     </div>
     <div v-else-if="state.error" class="empty-state">{{ state.error }}</div>
     <template v-else>
       <div class="summary-grid">
         <article class="card">
-          <h3>{{ t.overview.account }}</h3>
-          <div class="card-value">{{ state.overview?.accountName ?? t.common.noValue }}</div>
+          <h3>{{ t("overview.account") }}</h3>
+          <div class="card-value">{{ state.overview?.accountName ?? t("common.noValue") }}</div>
           <p>{{ state.overview?.baseUrl }}</p>
         </article>
         <article class="card">
-          <h3>{{ t.overview.cachedLogs }}</h3>
+          <h3>{{ t("overview.cachedLogs") }}</h3>
           <div class="card-value">{{ formatQuotaValue(state.overview?.todayRemainingQuota) }}</div>
           <p>
             {{
               state.overview?.todayRemainingQuota == null
-                ? t.overview.remainingQuotaUnavailable
-                : t.overview.remainingQuotaHint
+                ? t("overview.remainingQuotaUnavailable")
+                : t("overview.remainingQuotaHint")
             }}
           </p>
         </article>
         <article class="card">
-          <h3>{{ t.overview.totalCost }}</h3>
+          <h3>{{ t("overview.totalCost") }}</h3>
           <div class="card-value">${{ (state.overview?.totalCostUsd ?? 0).toFixed(4) }}</div>
-          <p>{{ t.overview.aggregatedFromLocal }}</p>
+          <p>{{ t("overview.aggregatedFromLocal") }}</p>
         </article>
         <article class="card">
-          <h3>{{ t.overview.totalTokens }}</h3>
+          <h3>{{ t("overview.totalTokens") }}</h3>
           <div class="card-value">{{ state.overview?.totalTokens ?? 0 }}</div>
           <p>
-            {{ t.overview.lastSyncPrefix
-            }}{{ formatDateTimeDisplay(state.overview?.lastSuccessfulSyncAt) ?? t.overview.never }}
+            {{ t("overview.lastSyncPrefix")
+            }}{{ formatDateTimeDisplay(state.overview?.lastSuccessfulSyncAt) ?? t("overview.never") }}
           </p>
         </article>
       </div>
@@ -118,7 +117,7 @@ watch(
           :data="state.analytics?.trend ?? []"
           :granularity="state.granularity"
           :loading="state.loading"
-          :title="t.overview.localUsdTrend"
+          :title="t('overview.localUsdTrend')"
         />
       </div>
     </template>

@@ -1,8 +1,8 @@
-import { mount } from "@vue/test-utils";
 import { describe, expect, it, vi } from "vitest";
 import { nextTick } from "vue";
 
 import ChartPanel from "./ChartPanel.vue";
+import { mountWithApp } from "../../test-utils";
 
 const echartsMocks = vi.hoisted(() => {
   const setOption = vi.fn();
@@ -27,7 +27,7 @@ describe("ChartPanel", () => {
   it("keeps the existing chart visible without showing a loading state while refreshing", async () => {
     echartsMocks.setOption.mockClear();
 
-    const wrapper = mount(ChartPanel, {
+    const wrapper = mountWithApp(ChartPanel, {
       props: {
         title: "模型成本构成",
         option: { series: [{ type: "pie", data: [{ value: 1, name: "gpt-5.4" }] }] },

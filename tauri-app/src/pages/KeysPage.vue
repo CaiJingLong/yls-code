@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, reactive } from "vue";
+import { useI18n } from "vue-i18n";
 
 import AccountForm from "../components/keys/AccountForm.vue";
 import PageHeader from "../components/layout/PageHeader.vue";
-import { zhCN } from "../i18n/zhCN";
 import { accountsStore } from "../stores/accounts";
 import type { SaveAccountInput } from "../types/accounts";
 
@@ -12,6 +12,7 @@ const state = reactive({
   editing: null as SaveAccountInput | null,
   error: null as string | null,
 });
+const { t } = useI18n();
 
 const items = computed(() => accountsStore.state.items);
 
@@ -38,7 +39,7 @@ async function handleSubmit(input: SaveAccountInput) {
     await accountsStore.saveAccount(input);
     state.editing = null;
   } catch {
-    state.error = zhCN.errors.saveAccount;
+    state.error = t("errors.saveAccount");
   } finally {
     state.loading = false;
   }
@@ -54,7 +55,7 @@ async function handleDelete(id: string) {
       state.editing = null;
     }
   } catch {
-    state.error = zhCN.errors.deleteAccount;
+    state.error = t("errors.deleteAccount");
   } finally {
     state.loading = false;
   }
@@ -67,37 +68,35 @@ async function toggleEnabled(id: string, enabled: boolean) {
   try {
     await accountsStore.setAccountEnabled(id, enabled);
   } catch {
-    state.error = zhCN.errors.updateAccount;
+    state.error = t("errors.updateAccount");
   } finally {
     state.loading = false;
   }
 }
-
-const t = zhCN;
 </script>
 
 <template>
   <section class="page page-grid">
-    <PageHeader :title="t.keys.title" :subtitle="t.keys.subtitle" />
+    <PageHeader :title="t('keys.title')" :subtitle="t('keys.subtitle')" />
 
     <div v-if="state.error" class="empty-state">{{ state.error }}</div>
 
     <div class="page-grid" style="grid-template-columns: 1.2fr 1fr;">
       <section class="table-panel">
         <header class="table-header">
-          <h2>{{ t.keys.accounts }}</h2>
-          <button class="ghost" @click="state.editing = null">{{ t.common.create }}</button>
+          <h2>{{ t("keys.accounts") }}</h2>
+          <button class="ghost" @click="state.editing = null">{{ t("common.create") }}</button>
         </header>
-        <div v-if="accountsStore.state.loading" class="panel-empty">{{ t.keys.loadingAccounts }}</div>
-        <div v-else-if="!items.length" class="panel-empty">{{ t.keys.noAccounts }}</div>
+        <div v-if="accountsStore.state.loading" class="panel-empty">{{ t("keys.loadingAccounts") }}</div>
+        <div v-else-if="!items.length" class="panel-empty">{{ t("keys.noAccounts") }}</div>
         <div v-else class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>{{ t.keys.columnName }}</th>
-                <th>{{ t.keys.columnUrl }}</th>
-                <th>{{ t.keys.columnStatus }}</th>
-                <th>{{ t.keys.columnActions }}</th>
+                <th>{{ t("keys.columnName") }}</th>
+                <th>{{ t("keys.columnUrl") }}</th>
+                <th>{{ t("keys.columnStatus") }}</th>
+                <th>{{ t("keys.columnActions") }}</th>
               </tr>
             </thead>
             <tbody>
@@ -105,14 +104,14 @@ const t = zhCN;
                 <td>{{ item.name }}</td>
                 <td>{{ item.baseUrl }}</td>
                 <td>
-                  <span class="tag">{{ item.enabled ? t.common.enabled : t.common.disabled }}</span>
+                  <span class="tag">{{ item.enabled ? t("common.enabled") : t("common.disabled") }}</span>
                 </td>
                 <td class="actions">
-                  <button class="secondary" :disabled="state.loading" @click="editAccount(item.id)">{{ t.common.edit }}</button>
+                  <button class="secondary" :disabled="state.loading" @click="editAccount(item.id)">{{ t("common.edit") }}</button>
                   <button class="ghost" :disabled="state.loading" @click="toggleEnabled(item.id, !item.enabled)">
-                    {{ item.enabled ? t.common.disable : t.common.enable }}
+                    {{ item.enabled ? t("common.disable") : t("common.enable") }}
                   </button>
-                  <button class="ghost" :disabled="state.loading" @click="handleDelete(item.id)">{{ t.common.delete }}</button>
+                  <button class="ghost" :disabled="state.loading" @click="handleDelete(item.id)">{{ t("common.delete") }}</button>
                 </td>
               </tr>
             </tbody>

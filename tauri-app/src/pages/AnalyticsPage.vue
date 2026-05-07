@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from "vue";
+import { useI18n } from "vue-i18n";
 
 import CostTrendChart from "../components/charts/CostTrendChart.vue";
 import ModelCostPie from "../components/charts/ModelCostPie.vue";
 import DateTimePicker from "../components/common/DateTimePicker.vue";
 import PageHeader from "../components/layout/PageHeader.vue";
-import { zhCN } from "../i18n/zhCN";
 import {
   alignTrendPointsToDisplayGranularity,
   resolveAnalyticsQueryGranularity,
@@ -36,6 +36,7 @@ const state = reactive({
   analytics: null as AnalyticsResponse | null,
   error: null as string | null,
 });
+const { t } = useI18n();
 let latestRequestId = 0;
 
 async function loadAnalytics() {
@@ -71,7 +72,7 @@ async function loadAnalytics() {
     }
   } catch {
     if (requestId === latestRequestId) {
-      state.error = zhCN.errors.loadAnalytics;
+      state.error = t("errors.loadAnalytics");
     }
   } finally {
     if (requestId === latestRequestId) {
@@ -80,16 +81,13 @@ async function loadAnalytics() {
   }
 }
 
-const t = zhCN;
 const effectiveRangeText = computed(() => {
   const after = toUtcISOStringFromLocalInput(state.createdAfter);
   const before = toUtcISOStringFromLocalInput(state.createdBefore, {
     boundary: "end",
   });
-  const afterText =
-    formatDateTimeDisplay(after) ?? t.analytics.rangeStartDefault;
-  const beforeText =
-    formatDateTimeDisplay(before) ?? t.analytics.rangeEndDefault;
+  const afterText = formatDateTimeDisplay(after) ?? t("analytics.rangeStartDefault");
+  const beforeText = formatDateTimeDisplay(before) ?? t("analytics.rangeEndDefault");
 
   return `${afterText} ~ ${beforeText}`;
 });
@@ -146,39 +144,39 @@ watch(
 
 <template>
   <section class="page page-grid">
-    <PageHeader :title="t.analytics.title" :subtitle="t.analytics.subtitle">
+    <PageHeader :title="t('analytics.title')" :subtitle="t('analytics.subtitle')">
       <label class="field">
-        <span>{{ t.analytics.granularity }}</span>
+        <span>{{ t("analytics.granularity") }}</span>
         <select v-model="state.granularity">
-          <option value="hour">{{ t.analytics.hourly }}</option>
-          <option value="day">{{ t.analytics.daily }}</option>
+          <option value="hour">{{ t("analytics.hourly") }}</option>
+          <option value="day">{{ t("analytics.daily") }}</option>
         </select>
       </label>
-      <DateTimePicker v-model="state.createdAfter" :label="t.analytics.createdAfter" />
-      <DateTimePicker v-model="state.createdBefore" :label="t.analytics.createdBefore" />
+      <DateTimePicker v-model="state.createdAfter" :label="t('analytics.createdAfter')" />
+      <DateTimePicker v-model="state.createdBefore" :label="t('analytics.createdBefore')" />
       <label class="checkbox-field analytics-reasoning-merge">
         <input v-model="state.mergeReasoningByModel" type="checkbox" />
-        <span>{{ t.analytics.mergeReasoningByModel }}</span>
+        <span>{{ t("analytics.mergeReasoningByModel") }}</span>
       </label>
       <button class="secondary" :disabled="state.loading" @click="loadAnalytics">
-        {{ t.analytics.applyFilters }}
+        {{ t("analytics.applyFilters") }}
       </button>
     </PageHeader>
 
     <div v-if="!accountsStore.state.activeAccountId" class="empty-state">
-      {{ t.analytics.emptyNoAccount }}
+      {{ t("analytics.emptyNoAccount") }}
     </div>
     <div v-else-if="state.error" class="empty-state">{{ state.error }}</div>
     <template v-else>
       <section class="card analytics-filter-state">
         <div class="analytics-filter-state-row">
-          <span class="tag">{{ t.analytics.effectiveRange }}</span>
+          <span class="tag">{{ t("analytics.effectiveRange") }}</span>
           <code>{{ effectiveRangeText }}</code>
         </div>
         <div class="analytics-filter-metrics">
-          <span>{{ t.analytics.filteredRequests }}: {{ filteredSummary.requests }}</span>
-          <span>{{ t.analytics.filteredTokens }}: {{ filteredSummary.tokens }}</span>
-          <span>{{ t.analytics.filteredCost }}: ${{ filteredSummary.cost.toFixed(4) }}</span>
+          <span>{{ t("analytics.filteredRequests") }}: {{ filteredSummary.requests }}</span>
+          <span>{{ t("analytics.filteredTokens") }}: {{ filteredSummary.tokens }}</span>
+          <span>{{ t("analytics.filteredCost") }}: ${{ filteredSummary.cost.toFixed(4) }}</span>
         </div>
       </section>
 
@@ -188,23 +186,23 @@ watch(
           :data="state.analytics?.trend ?? []"
           :granularity="state.granularity"
           :loading="state.loading"
-          :title="t.analytics.costTrend"
+          :title="t('analytics.costTrend')"
         />
       </div>
 
       <section class="table-panel">
         <header class="table-header">
-          <h2>{{ t.analytics.modelRanking }}</h2>
+          <h2>{{ t("analytics.modelRanking") }}</h2>
         </header>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>{{ t.analytics.columnModel }}</th>
-                <th>{{ t.analytics.columnCost }}</th>
-                <th>{{ t.analytics.columnPercentage }}</th>
-                <th>{{ t.analytics.columnTokens }}</th>
-                <th>{{ t.analytics.columnRequests }}</th>
+                <th>{{ t("analytics.columnModel") }}</th>
+                <th>{{ t("analytics.columnCost") }}</th>
+                <th>{{ t("analytics.columnPercentage") }}</th>
+                <th>{{ t("analytics.columnTokens") }}</th>
+                <th>{{ t("analytics.columnRequests") }}</th>
               </tr>
             </thead>
             <tbody>

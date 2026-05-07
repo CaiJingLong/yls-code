@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive, watch } from "vue";
+import { useI18n } from "vue-i18n";
 
-import { zhCN } from "../../i18n/zhCN";
 import type { SaveAccountInput } from "../../types/accounts";
 
 const props = defineProps<{
@@ -22,7 +22,7 @@ const form = reactive<SaveAccountInput>({
   enabled: true,
 });
 
-const t = zhCN;
+const { t } = useI18n();
 
 watch(
   () => props.initialValue,
@@ -45,36 +45,36 @@ function handleSubmit() {
   <section class="card stack">
     <div class="page-title">
       <div>
-        <h2>{{ form.id ? t.accountForm.editTitle : t.accountForm.addTitle }}</h2>
-        <p>{{ t.accountForm.subtitle }}</p>
+        <h2>{{ form.id ? t("accountForm.editTitle") : t("accountForm.addTitle") }}</h2>
+        <p>{{ t("accountForm.subtitle") }}</p>
       </div>
     </div>
 
     <div class="form-grid">
       <label class="field">
-        <span>{{ t.accountForm.name }}</span>
-        <input v-model="form.name" :placeholder="t.accountForm.namePlaceholder" />
+        <span>{{ t("accountForm.name") }}</span>
+        <input v-model="form.name" :placeholder="t('accountForm.namePlaceholder')" />
       </label>
       <label class="field">
-        <span>{{ t.accountForm.baseUrl }}</span>
+        <span>{{ t("accountForm.baseUrl") }}</span>
         <input v-model="form.baseUrl" />
       </label>
       <label class="field">
-        <span>{{ t.accountForm.apiKey }}</span>
-        <input v-model="form.apiKey" :placeholder="t.accountForm.apiKeyPlaceholder" />
+        <span>{{ t("accountForm.apiKey") }}</span>
+        <input v-model="form.apiKey" :placeholder="t('accountForm.apiKeyPlaceholder')" />
       </label>
       <label class="field">
-        <span>{{ t.accountForm.enabled }}</span>
+        <span>{{ t("accountForm.enabled") }}</span>
         <select v-model="form.enabled">
-          <option :value="true">{{ t.accountForm.enabledOption }}</option>
-          <option :value="false">{{ t.accountForm.disabledOption }}</option>
+          <option :value="true">{{ t("accountForm.enabledOption") }}</option>
+          <option :value="false">{{ t("accountForm.disabledOption") }}</option>
         </select>
       </label>
     </div>
 
     <div class="actions">
-      <button :disabled="loading" @click="handleSubmit">{{ t.common.save }}</button>
-      <button class="ghost" :disabled="loading" @click="$emit('cancel')">{{ t.common.cancel }}</button>
+      <button :disabled="loading" @click="handleSubmit">{{ t("common.save") }}</button>
+      <button class="ghost" :disabled="loading" @click="$emit('cancel')">{{ t("common.cancel") }}</button>
     </div>
   </section>
 </template>

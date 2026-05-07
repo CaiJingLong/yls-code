@@ -1,5 +1,6 @@
 import { reactive } from "vue";
 
+import { resolveAppVersion } from "../lib/version";
 import { isTauriRuntime } from "../lib/tauri/runtime";
 import { isUpdaterAvailable } from "../lib/tauri/updater";
 import { accountsStore } from "./accounts";
@@ -8,6 +9,7 @@ import { updateStore } from "./update";
 
 const state = reactive({
   initialized: false,
+  version: "",
 });
 
 export const appStore = {
@@ -16,6 +18,8 @@ export const appStore = {
     if (state.initialized) {
       return;
     }
+
+    state.version = await resolveAppVersion();
 
     if (isTauriRuntime()) {
       await accountsStore.load();

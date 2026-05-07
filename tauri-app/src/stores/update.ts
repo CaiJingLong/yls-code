@@ -1,7 +1,7 @@
 import { reactive } from "vue";
 import { relaunch } from "@tauri-apps/plugin-process";
 
-import { zhCN } from "../i18n/zhCN";
+import { translate } from "../i18n";
 import {
   checkForUpdate,
   downloadAndInstallUpdate,
@@ -54,7 +54,7 @@ export const updateStore = {
     state.currentVersion = "";
     state.latestVersion = "";
     state.notes = "";
-    state.message = zhCN.settings.updateChecking;
+    state.message = translate("settings.updateChecking");
     state.downloadedBytes = 0;
     state.totalBytes = null;
 
@@ -63,7 +63,7 @@ export const updateStore = {
       pendingUpdate = update;
 
       if (!update) {
-        state.message = zhCN.settings.updateNotFound;
+        state.message = translate("settings.updateNotFound");
         return;
       }
 
@@ -71,12 +71,12 @@ export const updateStore = {
       state.currentVersion = update.currentVersion;
       state.latestVersion = update.version;
       state.notes = update.body ?? "";
-      state.message = zhCN.settings.updateFound.replace("{version}", update.version);
+      state.message = translate("settings.updateFound", { version: update.version });
     } catch {
       pendingUpdate = null;
       state.hasUpdate = false;
       state.message = "";
-      state.error = zhCN.settings.updateCheckFailed;
+      state.error = translate("settings.updateCheckFailed");
     } finally {
       state.checking = false;
     }
@@ -94,7 +94,7 @@ export const updateStore = {
 
     state.installing = true;
     state.error = null;
-    state.message = zhCN.settings.updateDownloading;
+    state.message = translate("settings.updateDownloading");
     state.downloadedBytes = 0;
     state.totalBytes = null;
 
@@ -104,24 +104,24 @@ export const updateStore = {
         state.totalBytes = total;
 
         if (total && total > 0) {
-          state.message = zhCN.settings.updateDownloadingProgress
-            .replace("{done}", formatBytes(downloaded))
-            .replace("{total}", formatBytes(total));
+          state.message = translate("settings.updateDownloadingProgress", {
+            done: formatBytes(downloaded),
+            total: formatBytes(total),
+          });
           return;
         }
 
-        state.message = zhCN.settings.updateDownloadingSingle.replace(
-          "{done}",
-          formatBytes(downloaded),
-        );
+        state.message = translate("settings.updateDownloadingSingle", {
+          done: formatBytes(downloaded),
+        });
       });
 
-      state.message = zhCN.settings.updateInstalled;
+      state.message = translate("settings.updateInstalled");
       pendingUpdate = null;
       state.hasUpdate = false;
       await relaunch();
     } catch {
-      state.error = zhCN.settings.updateInstallFailed;
+      state.error = translate("settings.updateInstallFailed");
     } finally {
       state.installing = false;
     }
