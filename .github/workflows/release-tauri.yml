@@ -20,6 +20,7 @@ jobs:
     outputs:
       version: ${{ steps.read-version.outputs.version }}
       tag: ${{ steps.make-tag.outputs.tag }}
+      release_body: ${{ steps.generate-release-notes.outputs.release_body }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,6 +41,19 @@ jobs:
       - name: Install dependencies
         working-directory: tauri-app
         run: bun install --frozen-lockfile
+
+      - name: Find previous tag
+        id: find-previous-tag
+        run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || true)
+          echo "tag=$PREVIOUS_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Generate release notes
+        id: generate-release-notes
+        env:
+          RELEASE_NOTES_RANGE: ${{ steps.find-previous-tag.outputs.tag && format('{0}..HEAD', steps.find-previous-tag.outputs.tag) || '' }}
+          REPOSITORY_URL: ${{ github.server_url }}/${{ github.repository }}
+        run: node ./scripts/generate-release-notes.mjs
 
       - name: Bump version
         working-directory: tauri-app
@@ -87,27 +101,25 @@ jobs:
             const tag = "${{ needs.bump-and-tag.outputs.tag }}";
             const owner = context.repo.owner;
             const repo = context.repo.repo;
+            const releaseBody = ${{ toJSON(needs.bump-and-tag.outputs.release_body) }};
+            const macOsNotes = [
+              "## macOS 说明",
+              "",
+              "- 如果首次打开时出现“yls-code”已损坏、无法打开、应移到废纸篓的提示，请在终端执行：`xattr -rd com.apple.quarantine \"/Applications/yls-code.app\"`",
+              "- 仅在你确认安装包来自本仓库 GitHub Release 时执行上述操作。",
+            ].join("\n");
+            const body = `${releaseBody}\n\n${macOsNotes}`;
             try {
               const { data } = await github.rest.repos.getReleaseByTag({ owner, repo, tag });
               core.setOutput("release_id", String(data.id));
             } catch (error) {
               if (error.status !== 404) throw error;
-              const releaseBody = [
-                "自动构建发布版本。",
-                "",
-                "- 包含 Tauri updater 元数据（latest.json）",
-                "- 支持 Windows x86 与 macOS Apple Silicon",
-                "",
-                "macOS 说明：",
-                "- 如果首次打开时出现“yls-code”已损坏、无法打开、应移到废纸篓的提示，请在终端执行：xattr -rd com.apple.quarantine \"/Applications/yls-code.app\"",
-                "- 仅在你确认安装包来自本仓库 GitHub Release 时执行上述操作。",
-              ].join("\n");
               const { data } = await github.rest.repos.createRelease({
                 owner,
                 repo,
                 tag_name: tag,
                 name: `yls-code ${tag}`,
-                body: releaseBody,
+                body,
                 draft: true,
                 prerelease: false,
               });
@@ -167,14 +179,6 @@ jobs:
           releaseId: ${{ needs.create-release.outputs.release_id }}
           tagName: ${{ needs.bump-and-tag.outputs.tag }}
           releaseName: "yls-code v__VERSION__"
-          releaseBody: |
-            自动构建发布版本。
-            - 包含 Tauri updater 元数据（latest.json）
-            - 支持 Windows x86 与 macOS Apple Silicon
-            
-            macOS 说明：
-            - 如果首次打开时出现“yls-code”已损坏、无法打开、应移到废纸篓的提示，请在终端执行：`xattr -rd com.apple.quarantine "/Applications/yls-code.app"`
-            - 仅在你确认安装包来自本仓库 GitHub Release 时执行上述操作。
           releaseDraft: true
           prerelease: false
           includeUpdaterJson: true
@@ -234,14 +238,6 @@ jobs:
           releaseId: ${{ needs.create-release.outputs.release_id }}
           tagName: ${{ needs.bump-and-tag.outputs.tag }}
           releaseName: "yls-code v__VERSION__"
-          releaseBody: |
-            自动构建发布版本。
-            - 包含 Tauri updater 元数据（latest.json）
-            - 支持 Windows x86 与 macOS Apple Silicon
-            
-            macOS 说明：
-            - 如果首次打开时出现“yls-code”已损坏、无法打开、应移到废纸篓的提示，请在终端执行：`xattr -rd com.apple.quarantine "/Applications/yls-code.app"`
-            - 仅在你确认安装包来自本仓库 GitHub Release 时执行上述操作。
           releaseDraft: true
           prerelease: false
           includeUpdaterJson: true
@@ -293,10 +289,18 @@ jobs:
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
+            const releaseBody = ${{ toJSON(needs.bump-and-tag.outputs.release_body) }};
+            const macOsNotes = [
+              "## macOS 说明",
+              "",
+              "- 如果首次打开时出现“yls-code”已损坏、无法打开、应移到废纸篓的提示，请在终端执行：`xattr -rd com.apple.quarantine \"/Applications/yls-code.app\"`",
+              "- 仅在你确认安装包来自本仓库 GitHub Release 时执行上述操作。",
+            ].join("\n");
             await github.rest.repos.updateRelease({
               owner,
               repo,
               release_id: Number("${{ needs.create-release.outputs.release_id }}"),
+              body: `${releaseBody}\n\n${macOsNotes}`,
               draft: false,
               prerelease: false,
             });
