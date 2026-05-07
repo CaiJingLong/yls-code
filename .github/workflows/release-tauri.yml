@@ -29,6 +29,14 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
+      - name: Restore Bun cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('tauri-app/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
       - name: Install dependencies
         working-directory: tauri-app
         run: bun install --frozen-lockfile
@@ -118,11 +126,25 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
+      - name: Restore Bun cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('tauri-app/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.88.0
           targets: i686-pc-windows-msvc
+
+      - name: Restore Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            tauri-app/src-tauri -> target
 
       - name: Install frontend dependencies
         working-directory: tauri-app
@@ -160,7 +182,7 @@ jobs:
           args: --target i686-pc-windows-msvc
 
   build-macos:
-    needs: [bump-and-tag, create-release, build-windows]
+    needs: [bump-and-tag, create-release]
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -171,11 +193,25 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
+      - name: Restore Bun cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('tauri-app/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.88.0
           targets: aarch64-apple-darwin
+
+      - name: Restore Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            tauri-app/src-tauri -> target
 
       - name: Install frontend dependencies
         working-directory: tauri-app
