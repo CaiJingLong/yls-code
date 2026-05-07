@@ -84,12 +84,22 @@ jobs:
               core.setOutput("release_id", String(data.id));
             } catch (error) {
               if (error.status !== 404) throw error;
+              const releaseBody = [
+                "自动构建发布版本。",
+                "",
+                "- 包含 Tauri updater 元数据（latest.json）",
+                "- 支持 Windows x86 与 macOS Apple Silicon",
+                "",
+                "macOS 说明：",
+                "- 如果首次打开时出现“yls-code”已损坏、无法打开、应移到废纸篓的提示，请在终端执行：xattr -rd com.apple.quarantine \"/Applications/yls-code.app\"",
+                "- 仅在你确认安装包来自本仓库 GitHub Release 时执行上述操作。",
+              ].join("\\n");
               const { data } = await github.rest.repos.createRelease({
                 owner,
                 repo,
                 tag_name: tag,
                 name: `yls-code ${tag}`,
-                body: "自动构建发布版本。",
+                body: releaseBody,
                 draft: false,
                 prerelease: false,
               });
@@ -134,11 +144,15 @@ jobs:
           projectPath: tauri-app
           releaseId: ${{ needs.create-release.outputs.release_id }}
           tagName: ${{ needs.bump-and-tag.outputs.tag }}
-          releaseName: yls-code v__VERSION__
+          releaseName: "yls-code v__VERSION__"
           releaseBody: |
             自动构建发布版本。
             - 包含 Tauri updater 元数据（latest.json）
             - 支持 Windows x86 与 macOS Apple Silicon
+            
+            macOS 说明：
+            - 如果首次打开时出现“yls-code”已损坏、无法打开、应移到废纸篓的提示，请在终端执行：`xattr -rd com.apple.quarantine "/Applications/yls-code.app"`
+            - 仅在你确认安装包来自本仓库 GitHub Release 时执行上述操作。
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: true
@@ -183,11 +197,15 @@ jobs:
           projectPath: tauri-app
           releaseId: ${{ needs.create-release.outputs.release_id }}
           tagName: ${{ needs.bump-and-tag.outputs.tag }}
-          releaseName: yls-code v__VERSION__
+          releaseName: "yls-code v__VERSION__"
           releaseBody: |
             自动构建发布版本。
             - 包含 Tauri updater 元数据（latest.json）
             - 支持 Windows x86 与 macOS Apple Silicon
+            
+            macOS 说明：
+            - 如果首次打开时出现“yls-code”已损坏、无法打开、应移到废纸篓的提示，请在终端执行：`xattr -rd com.apple.quarantine "/Applications/yls-code.app"`
+            - 仅在你确认安装包来自本仓库 GitHub Release 时执行上述操作。
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: true

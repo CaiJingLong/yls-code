@@ -33,6 +33,11 @@ This directory contains the active Tauri desktop application for `yls-code`.
   - `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`（可选）
   - `TAURI_UPDATER_PUBKEY`（用于 updater 验签）
 
+## macOS
+
+- 如果用户在 macOS 上看到“`yls-code` 已损坏，无法打开。你应该将它移到废纸篓。”，统一使用下面的终端命令解除隔离属性：
+  - `xattr -rd com.apple.quarantine "/Applications/yls-code.app"`
+
 ## Release Workflow
 
 - Workflow 文件：`../.github/workflows/release-tauri.yml`
@@ -41,3 +46,4 @@ This directory contains the active Tauri desktop application for `yls-code`.
   1. 自动 bump 版本并创建 `vX.Y.Z` tag
   2. 顺序构建并发布 Windows x86 (`i686-pc-windows-msvc`) 与 macOS ARM (`aarch64-apple-darwin`) 安装包
   3. 上传 updater 所需签名与 `latest.json` 到同一个 release
+  4. GitHub Release 说明中保留 macOS 终端解除隔离属性的处理方式
